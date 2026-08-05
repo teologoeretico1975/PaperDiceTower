@@ -1,0 +1,10 @@
+# Blender backups & autosave
+*.blend1
+*.blend2
+*.blend@
+*.blend~
+
+# OS junk (Windows)
+Thumbs.db
+desktop.ini
+$RECYCLE.BIN/
