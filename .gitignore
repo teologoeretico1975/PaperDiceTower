@@ -434,6 +434,11 @@ FodyWeavers.xsd
 *.blend@
 *.blend~
 
+# I .obj in export/ sono modelli Wavefront per Pepakura, non file oggetto
+# compilati: la regola *.obj piu' sopra viene dal template Visual Studio, dove
+# .obj significa output del compilatore C/C++.
+!export/*.obj
+
 # OS junk (Windows)
 Thumbs.db
 desktop.ini
