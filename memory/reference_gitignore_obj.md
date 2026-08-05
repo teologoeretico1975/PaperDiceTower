@@ -11,6 +11,8 @@ In questo progetto `.obj` e' invece il formato Wavefront verso Pepakura, cioe' i
 
 L'eccezione `!export/*.obj` in fondo al `.gitignore` risolve, perche' le regole successive vincono su quelle precedenti.
 
-**Come applicarla:** dopo aver committato artefatti di export, verificare che siano davvero tracciati con `git ls-files export` invece di fidarsi dell'esito del commit. Se in futuro si aggiungono altri formati (`*.stl`, `*.pdo` di Pepakura, texture) controllare prima con `git check-ignore -v <file>` se il template li esclude: contiene centinaia di regole pensate per un progetto .NET, non per un progetto 3D.
+**Come applicarla:** dopo aver committato artefatti di export, verificare che siano davvero tracciati con `git ls-files export` invece di fidarsi dell'esito del commit. Se in futuro si aggiungono altri formati (`*.stl`, texture) controllare prima con `git check-ignore -v <file>` se il template li esclude: contiene centinaia di regole pensate per un progetto .NET, non per un progetto 3D.
+
+**Confine deciso per `export/`:** gli `.obj` sono la fonte verso Pepakura e si versionano; gli artefatti prodotti *da* Pepakura (`.pdo` di progetto, `.pdf` del pattern stampabile) restano fuori, perche' si rigenerano aprendo gli `.obj`. Le regole relative sono in fondo al `.gitignore`.
 
 Vedi [[project-panoramica]].

@@ -439,6 +439,12 @@ FodyWeavers.xsd
 # .obj significa output del compilatore C/C++.
 !export/*.obj
 
+# Artefatti prodotti DA Pepakura (progetto, pattern stampabile): si rigenerano
+# aprendo gli .obj, quindi restano fuori dal repo. Gli .obj invece sono la fonte
+# e vanno versionati.
+export/*.pdo
+export/*.pdf
+
 # OS junk (Windows)
 Thumbs.db
 desktop.ini
