@@ -1,6 +1,6 @@
 ---
 name: reference-bmesh-lessons
-description: Insidie di bmesh.ops scoperte modellando Torre — extrude che lascia facce fantasma, wire edge orfani
+description: Insidie di bmesh.ops scoperte modellando Torre — extrude con facce fantasma, wire edge orfani, liste duplicate, bisect parziale
 metadata:
   type: reference
 ---
@@ -23,6 +23,18 @@ wire = [e for e in bm.edges if len(e.link_faces) == 0]
 if wire:
     bmesh.ops.delete(bm, geom=wire, context='EDGES')
 ```
+
+**3. `bmesh.ops` rifiuta liste in cui la stessa entità compare due volte.** Costruendo il `geom` da passare a `bisect_plane` partendo da più facce, spigoli e vertici condivisi finiscono duplicati e l'operatore solleva `ValueError: found the same (BMVert/BMEdge/BMFace) used multiple times`. Va deduplicato con un set:
+
+```python
+geom = list(faces)
+geom += list({e for f in faces for e in f.edges})
+geom += list({v for f in faces for v in f.verts})
+```
+
+**4. Tagliare solo un settore di un anello lascia T-junction.** Se si bisect solo alcune facce di un anello chiuso, gli spigoli verticali condivisi coi vicini vengono spezzati e i vicini restano con un vertice a metà spigolo (non-manifold). Conviene tagliare l'anello intero e poi cancellare solo le facce del settore che interessa.
+
+**5. Uno script rigeneratore deve cancellare tutto ciò che crea.** Aggiungendo un oggetto nuovo (es. `Rampa`) senza inserirlo nella lista di pulizia iniziale, ogni riesecuzione ne accumula una copia (`Rampa.001`, `Rampa.002`, ...) sovrapposta e invisibile. Controllare la lista degli oggetti della scena dopo un doppio run è il modo più rapido per accorgersene.
 
 **Perché:** entrambi i bug sono stati scoperti empiricamente durante la Fase 2 e Fase 3 (rastremazione ed estrusione della mensola), verificando dopo ogni operazione il conteggio di spigoli non-manifold — non erano documentati in modo ovvio nell'API reference bundle.
 

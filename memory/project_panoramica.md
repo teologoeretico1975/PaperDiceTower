@@ -1,18 +1,22 @@
 ---
 name: project-panoramica
-description: Cosa è il modello PaperDiceTower, vincoli di progetto e storia delle revisioni
+description: Cosa è il modello PaperDiceTower, come si rigenera, e le correzioni chieste dall'utente finora
 metadata:
   type: project
 ---
 
-Torre dadi fantasy low-poly modellata in Blender (oggetto "Torre" + oggetti "Merlone_01..07" separati), pensata per essere esportata e unfoldata con Pepakura in un prodotto papercraft venduto su Etsy (ispirata a torri dadi in legno reali).
+Torre dadi fantasy low-poly modellata in Blender, da esportare e unfoldare con Pepakura in un prodotto papercraft destinato alla vendita su Etsy. Reference fornite dall'utente: una torre dadi pieghevole in legno tagliato al laser, poi una torre in resina con base rocciosa, finestre ad arco e muro perimetrale.
 
-**Vincolo tecnico fondamentale:** geometria completamente faceted — niente subdivision surface, sculpting o superfici curve smooth, altrimenti l'unfold in Pepakura non funziona. Ogni fase va verificata con un controllo di manifold-ness (0 spigoli non-manifold) prima di procedere.
+**Il modello si rigenera dallo script, non si modifica a mano.** `build_tower.py` in radice del repo è la fonte di verità: contiene i parametri in cima, le funzioni di costruzione e i controlli di validità. Da dentro Blender: `exec(open(r"E:\repos\PaperDiceTower\build_tower.py").read())`. È idempotente (cancella e ricrea gli oggetti che genera).
 
-**Struttura del modello** (aggiornata al 2026-08-05): base cilindrica a 9 lati; rastremazione "a stadi" (tronchi di cono alternati a tamburi cilindrici, non un cono continuo); vaschetta raccogli-dadi a livello del suolo con apertura nella parete + cima della torre aperta (i dadi entrano dall'alto e cadono dritti nella vaschetta, senza deflettori interni); parapetto (fascia cilindrica) sotto 7 merli a tronco di piramide con un paio di vuoti; feritoia decorativa incassata (non passante) su una faccia della base.
+**Perché uno script:** modellando a incrementi via MCP, ogni ritocco di proporzioni obbligava a rifare tutto a mano, e il `.blend` è un binario opaco in git. Con lo script le modifiche sono leggibili in diff e un collega può ricostruire il modello dal repo.
 
-**Perché:** la prima versione completa è stata giudicata "brutta e non vendibile su Etsy". Problemi identificati dall'utente: (1) la rastremazione continua dava una silhouette da proiettile invece che da torre; (2) i merli (cubi ruotati a caso, attaccati direttamente al cono) sembravano detriti casuali, non merlature; (3) la vaschetta era una scatola squadrata senza rifiniture.
+**Stato al 2026-08-05:** oggetti `Torre` (guscio) e `Rampa` (cuneo interno separato). Fatti: plinto roccioso, fusto slanciato (~3,5:1), silhouette a stadi, 9 finestre ad arco passanti sul corpo principale, varco + vaschetta a livello suolo, rampa di uscita, parapetto. Da fare: cima aperta con merlature, feritoie sul fusto basso, muro esterno decorativo.
 
-**Come applicarla:** se si modifica ulteriormente la torre, mantenere questi principi già corretti: la rastremazione deve avere tratti piatti (tamburi) tra un restringimento e l'altro, non una curva continua; oggetti ripetuti attorno a un asse (come i merli) vanno ruotati tangenzialmente alla curvatura, non lasciati con orientamento fisso nello spazio mondo; elementi funzionali come la vaschetta beneficiano di svasature/rastremazioni invece di forme a scatola pura.
+**Correzioni chieste dall'utente, da non reintrodurre:**
+- La prima versione completa era "brutta e non vendibile su Etsy". La rastremazione continua dava una silhouette da proiettile: servono tratti cilindrici (tamburi) tra un restringimento e l'altro. Anche il rapporto conta — a 2,3:1 sembrava un macinapepe, a 3,5:1 legge come torre.
+- I merli come cubi con orientamento fisso nello spazio mondo sembravano detriti casuali: gli oggetti ripetuti attorno a un asse vanno ruotati tangenzialmente alla curvatura. Vanno inoltre appoggiati su un parapetto dedicato, non attaccati direttamente al cono, e con sagoma a tronco di piramide invece che parallelepipedo.
+- La vaschetta deve stare a livello del suolo (z=0): sospesa sopra un gradino i dadi restano dentro. E il pavimento interno va inclinato verso l'uscita, altrimenti un dado si ferma sul piatto.
+- Le forme puramente a scatola (vaschetta rettangolare) leggono come prototipo tecnico: meglio svasature e settori radiali — che per di più risolvono la planarità delle facce.
 
-Vedi [[reference-memoria-su-disco]] e [[reference-bmesh-lessons]].
+Vedi [[reference-vincoli-papercraft]] per i vincoli di validità della mesh, [[reference-bmesh-lessons]] per le insidie dell'API, [[reference-memoria-su-disco]] per la policy di memoria.
