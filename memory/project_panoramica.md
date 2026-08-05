@@ -11,7 +11,9 @@ Torre dadi fantasy low-poly modellata in Blender, da esportare e unfoldare con P
 
 **Perché uno script:** modellando a incrementi via MCP, ogni ritocco di proporzioni obbligava a rifare tutto a mano, e il `.blend` è un binario opaco in git. Con lo script le modifiche sono leggibili in diff e un collega può ricostruire il modello dal repo.
 
-**Stato al 2026-08-05:** geometria completa. Tre oggetti = tre sotto-assemblaggi: `Torre` (guscio), `Rampa` (cuneo interno), `Muro` (cinta decorativa). Contiene: plinto roccioso, fusto slanciato (~3,5:1) con 9 feritoie, silhouette a stadi, 9 finestre ad arco passanti, varco + vaschetta a livello suolo, rampa di uscita, cima aperta con merlature, muro di cinta merlato con apertura ad arco. Da fare: materiali/texture, prova di unfold in Pepakura, stampa di prova.
+**Stato al 2026-08-05:** geometria completa e OBJ esportati in `export/` (torre alta 200 mm). Tre oggetti = tre sotto-assemblaggi: `Torre` (guscio), `Rampa` (cuneo interno), `Muro` (cinta decorativa). Contiene: plinto roccioso, fusto slanciato (~3,5:1) con 9 feritoie, silhouette a stadi, 9 finestre ad arco passanti, varco + vaschetta a livello suolo, rampa di uscita, cima aperta con merlature, muro di cinta merlato con apertura ad arco.
+
+**Prossimo passo, non ancora fatto:** l'utente deve aprire gli OBJ in Pepakura, fare l'unfold e assemblare una stampa di prova. I controlli automatici garantiscono che la mesh sia valida, non che l'unfold dia pezzi comodi: quella prova va fatta prima di investire tempo in materiali e texture. I parametri piu' a rischio di dover cambiare sono elencati nel README (feritoie a 2,8 mm, varco a 29 mm contro un d20 da 20 mm, soglia dell'apertura del muro a 2,3 mm).
 
 **Correzioni chieste dall'utente, da non reintrodurre:**
 - La prima versione completa era "brutta e non vendibile su Etsy". La rastremazione continua dava una silhouette da proiettile: servono tratti cilindrici (tamburi) tra un restringimento e l'altro. Anche il rapporto conta — a 2,3:1 sembrava un macinapepe, a 3,5:1 legge come torre.

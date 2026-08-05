@@ -56,6 +56,25 @@ Due merli adiacenti devono avere la **stessa altezza**. Se differiscono, al loro
 
 ## Stato
 
-Geometria completa: silhouette, finestre, feritoie, varco, vaschetta, rampa, merlature, muro di cinta. Tutti i controlli passano (0 non-manifold, 0 facce non planari, bordi pari agli attesi su tutti e tre gli oggetti).
+**Geometria completa e pronta per l'unfold.** Silhouette, finestre, feritoie, varco, vaschetta, rampa, merlature, muro di cinta. Tutti i controlli passano su tutti e tre gli oggetti:
 
-Da fare: materiali/texture, prova di unfold in Pepakura, stampa di prova per verificare che i dadi passino davvero alla scala scelta.
+| oggetto | facce | non-manifold | non planari | bordi |
+|---|---|---|---|---|
+| `Torre` | 158 | 0 | 0 | 135 = attesi |
+| `Muro` | 21 | 0 | 0 | 34 = attesi |
+| `Rampa` | 5 | 0 | 0 | 0 (guscio chiuso) |
+
+OBJ esportati in `export/`, scalati per una torre alta 200 mm.
+
+### Prossimo passo: prova di unfold e assemblaggio
+
+Nessuno ha ancora aperto il modello in Pepakura. I controlli garantiscono che la mesh sia *valida*, non che l'unfold produca pezzi comodi da montare: quella è la prova che conta e va fatta prima di investire tempo in materiali e texture.
+
+Punti dove è più probabile dover tornare sui parametri, in ordine di rischio:
+
+1. **Pezzi a scheggia nell'unfold** — se Pepakura genera pannelli stretti e allungati, la faccia corrispondente va allargata in `build_tower.py`.
+2. **Feritoie larghe 2,8 mm** (`SLIT_HALF_W`) — al limite del ritagliabile a mano. Se si strappano, allargarle.
+3. **Varco di uscita alto 29 mm** contro un d20 da ~20 mm — sulla carta passa, ma va provato col set di dadi vero (`opening_top` in `add_dice_tray`).
+4. **Soglia dell'apertura del muro**, ~2,3 mm (`WALL_GATE["v_bottom"]`) — se si strappa, alzare il bordo inferiore.
+
+Da fare dopo l'unfold: materiali e texture, che sono ciò che separa il modello attuale (grigio da viewport) dall'aspetto della reference.
