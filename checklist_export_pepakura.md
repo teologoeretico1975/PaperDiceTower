@@ -71,10 +71,20 @@ Tre trappole, tutte controintuitive:
 
 ## 5. Export
 
-- `File → Export → Wavefront (.obj)`
-- Opzioni: **Forward = -Y**, **Up = Z** (orientamento standard per Pepakura)
-- Esporta **solo gli oggetti selezionati** e valuta se esportare `Torre`, `Rampa` e `Muro` in tre file separati: sono tre sotto-assemblaggi distinti e tenerli separati rende l'unfold più leggibile
-- Includi UV se hai già applicato texture
+Automatizzato. Dopo aver eseguito lo script:
+
+```python
+export_for_pepakura(target_height_mm=200)
+```
+
+Scrive `export/Torre.obj`, `export/Rampa.obj`, `export/Muro.obj` — un file per sotto-assemblaggio, così l'unfold resta leggibile.
+
+Cosa fa e perché:
+
+- **La scala è già dentro il file**: i numeri nell'OBJ sono millimetri, quindi la torre esce alta esattamente 200 mm. La scala si applica in export (`global_scale`), non ridimensionando gli oggetti: il modello sul disco resta in unità di lavoro e puoi esportare a taglie diverse senza toccarlo. Verifica comunque la scala nella finestra di dialogo di Pepakura.
+- **Niente triangolazione** (`export_triangulated_mesh=False`): triangolare moltiplicherebbe le linee di piega. Le facce quadrangolari e n-gon sono per costruzione planari, quindi Pepakura le apre come un unico pannello.
+- **Assi**: esportati con la convenzione OBJ standard (Up = Y, Forward = -Z), cioè la Z di Blender diventa Y. Se Pepakura mostra il modello coricato, ruotalo lì o riesporta con `up_axis='Z'` — è l'unico parametro di cui non ho conferma diretta sul comportamento di Pepakura.
+- **Niente materiali/UV** finché non ci sono texture, per non generare un `.mtl` vuoto.
 
 ---
 

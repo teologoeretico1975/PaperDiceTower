@@ -819,6 +819,62 @@ def check_ramp_fits(ramp_obj, shell_obj, min_margin=0.04):
     }
 
 
+def export_for_pepakura(target_height_mm=200.0, out_dir=None, names=("Torre", "Rampa", "Muro")):
+    """Esporta un OBJ per oggetto, scalato all'altezza di stampa richiesta.
+
+    La scala si applica in fase di export (`global_scale`) invece di ridimensionare
+    gli oggetti: il modello sul disco resta in unita' di lavoro e si puo' esportare
+    a taglie diverse senza toccarlo. Tutti gli oggetti condividono l'origine del
+    mondo, quindi una scala uniforme li lascia allineati tra loro.
+
+    Un OBJ non porta unita' di misura: qui i numeri sono millimetri, cosi'
+    l'altezza dell'assieme vale esattamente *target_height_mm*. In Pepakura va
+    comunque verificata la scala nella sua finestra di dialogo.
+
+    `export_triangulated_mesh` resta disattivato: triangolare moltiplicherebbe
+    le linee di piega, e le facce quadrangolari o n-gon sono per costruzione
+    planari, quindi Pepakura le apre come un unico pannello.
+    """
+    import os
+
+    if out_dir is None:
+        out_dir = os.path.join(os.path.dirname(bpy.data.filepath), "export")
+    os.makedirs(out_dir, exist_ok=True)
+
+    objs = [bpy.data.objects[n] for n in names if n in bpy.data.objects]
+    z_all = [(o.matrix_world @ v.co).z for o in objs for v in o.data.vertices]
+    height_units = max(z_all) - min(z_all)
+    scale = target_height_mm / height_units
+
+    written = {}
+    for o in objs:
+        bpy.ops.object.select_all(action="DESELECT")
+        o.select_set(True)
+        bpy.context.view_layer.objects.active = o
+        path = os.path.join(out_dir, f"{o.name}.obj")
+        bpy.ops.wm.obj_export(
+            filepath=path,
+            export_selected_objects=True,
+            global_scale=scale,
+            apply_transform=True,
+            export_triangulated_mesh=False,
+            export_normals=True,
+            export_uv=False,
+            export_materials=False,
+        )
+        written[o.name] = path
+
+    bpy.ops.object.select_all(action="DESELECT")
+    return {
+        "files": written,
+        "height_units": round(height_units, 4),
+        "target_height_mm": target_height_mm,
+        "global_scale": round(scale, 4),
+        "up_axis": "Y",          # convenzione OBJ standard: la Z di Blender diventa Y
+        "forward_axis": "-Z",
+    }
+
+
 def refresh_viewport():
     """Il viewport non si aggiorna da solo dopo modifiche via script."""
     for window in bpy.context.window_manager.windows:
