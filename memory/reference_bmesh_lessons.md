@@ -36,6 +36,8 @@ geom += list({v for f in faces for v in f.verts})
 
 **5. Uno script rigeneratore deve cancellare tutto ciò che crea.** Aggiungendo un oggetto nuovo (es. `Rampa`) senza inserirlo nella lista di pulizia iniziale, ogni riesecuzione ne accumula una copia (`Rampa.001`, `Rampa.002`, ...) sovrapposta e invisibile. Controllare la lista degli oggetti della scena dopo un doppio run è il modo più rapido per accorgersene.
 
+**6. Le facce appena create con `bm.faces.new()` hanno normale nulla.** La normale resta `(0,0,0)` finché non si chiama `bm.normal_update()` (o `bmesh.ops.recalc_face_normals`). Qualunque codice che derivi assi locali dalla normale della faccia (per posizionare un dettaglio su di essa) su una faccia appena creata ottiene assi degeneri e fallisce in modo poco leggibile. Il caso non si presenta sulle facce lette con `bm.from_mesh()`, che le normali le hanno già — quindi il bug si manifesta solo quando si costruisce geometria nuova e la si lavora subito.
+
 **Perché:** entrambi i bug sono stati scoperti empiricamente durante la Fase 2 e Fase 3 (rastremazione ed estrusione della mensola), verificando dopo ogni operazione il conteggio di spigoli non-manifold — non erano documentati in modo ovvio nell'API reference bundle.
 
 **Come applicarla:** qualunque estrusione futura su questo file (o su altri modelli con lo stesso connettore) dovrebbe usare il pattern `extrude_and_move` con cancellazione esplicita della faccia originale e ripulitura dei wire edge, non il solo `extrude_face_region` + `translate`.

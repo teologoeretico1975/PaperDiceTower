@@ -56,6 +56,17 @@ RAMP = dict(
     height=0.48,        # dislivello: pendenza ~17 gradi
 )
 
+# Merlature: una per faccia del parapetto, 0 = vuoto. Non sono blocchi separati
+# ma il muro del parapetto che continua verso l'alto: la carta ha spessore zero,
+# quindi un merlo e' un pannello piatto: si ritaglia il profilo a zigzag e la
+# striscia si piega tutta insieme, zero pezzi da incollare. Come blocchi separati
+# sarebbero 7 scatoline da ~9x6 mm alla scala di stampa: inassemblabili.
+#
+# Vincolo: due merli adiacenti devono avere la stessa altezza, altrimenti al
+# loro spigolo comune nascono due bordi liberi sovrapposti invece di una piega.
+# Altezze uguali consecutive si fondono in un merlo piu' largo.
+MERLON_HEIGHTS = [0.34, 0.0, 0.30, 0.30, 0.0, 0.36, 0.0, 0.20, 0.0]
+
 # Le finestre sono fori passanti, non tasche incassate. Una tasca incassata
 # significherebbe 9 pezzi da ritagliare e incollare per finestra (8 pareti da
 # ~3 mm piu' il fondo, alla scala di stampa prevista): inassemblabile a mano.
@@ -67,6 +78,53 @@ WINDOW = dict(
     v_bottom=-0.46,
     v_spring=0.00,
     v_apex=0.50,
+    shoulder_frac=0.74,
+    shoulder_h=0.45,
+)
+
+# Feritoie sul fusto: fessure verticali passanti, larghe ~2,8 mm alla scala di
+# stampa. Piu' strette diventerebbero impossibili da ritagliare a mano.
+SLIT_HALF_W = 0.045
+# (angolo della faccia, centro verticale rispetto al centro faccia, semi-altezza).
+# Le quote si alternano tra faccia e faccia: cosi' non si rimuove carta tutta
+# alla stessa altezza, che indebolirebbe il tubo del fusto su un unico anello.
+SLITS = [
+    (-170.0, -0.55, 0.40),
+    (-130.0, 0.35, 0.35),
+    (-90.0, -0.55, 0.40),
+    (-50.0, 0.35, 0.35),
+    (-10.0, -0.55, 0.40),
+    (30.0, 0.35, 0.35),
+    (70.0, -0.55, 0.40),
+    (110.0, 0.35, 0.35),
+    (150.0, -0.55, 0.40),
+]
+
+# Muro di cinta decorativo davanti alla torre, oggetto separato ("Muro").
+# E' un pannello a spessore zero come il resto del guscio, non un muretto pieno:
+# in carta un muro pieno sarebbe una scatola sottile con decine di facce
+# minuscole. La linguetta orizzontale alla base (foot_inward) e' la superficie
+# da incollare, senza la quale un pannello a spessore zero non sta in piedi.
+# Il raggio deve stare fuori dalla vaschetta, che a terra arriva a ~2,37.
+WALL = dict(
+    radius=2.80,
+    angle_from=-150.0,
+    angle_to=-30.0,
+    segments=7,
+    base_height=0.55,
+    foot_inward=0.25,
+)
+# Merlatura del muro: vale lo stesso vincolo della torre (merli adiacenti di
+# altezza diversa creerebbero bordi liberi sovrapposti al posto di una piega).
+WALL_MERLONS = [0.20, 0.0, 0.20, 0.0, 0.20, 0.0, 0.20]
+# Apertura ad arco: e' decorativa, non un passaggio. Per arrivare a terra
+# servirebbe una soglia di pochi decimi di millimetro, che si strapperebbe.
+WALL_GATE = dict(
+    segment=3,          # segmento centrale
+    half_w=0.13,
+    v_bottom=-0.20,
+    v_spring=0.00,
+    v_apex=0.20,
     shoulder_frac=0.74,
     shoulder_h=0.45,
 )
@@ -132,24 +190,24 @@ def triangulate_twisted(bm, tol=1e-4):
 # --- Elementi del modello -------------------------------------------------
 
 
-def carve_gothic_window(bm, face, half_w, v_bottom, v_spring, v_apex,
-                        shoulder_frac, shoulder_h):
-    """Apre una finestra ad arco a punta (faceted) in una faccia quadrangolare planare.
+def quad_frame(face):
+    """Assi locali e angoli di una faccia quadrangolare verticale.
 
-    Il contorno ha 8 vertici: base rettangolare piu' arco a punta in 4 segmenti.
-    L'anello intorno usa 4 pentagoni ancorati SOLO ai 4 angoli della faccia:
-    aggiungere vertici sugli spigoli condivisi creerebbe T-junction non-manifold.
-
-    Il risultato e' un foro passante: il contorno resta come spigoli di bordo
-    (boundary), che e' esattamente cio' che serve perche' Pepakura ritagli la
-    sagoma. Vedi la nota su WINDOW per il perche' non sia una tasca incassata.
+    Restituisce `(P, BL, BR, TR, TL)` dove `P(u, v)` mappa coordinate locali
+    (u = orizzontale sulla faccia, v = verticale) in coordinate mondo.
     """
     verts_loop = list(face.verts)
     if len(verts_loop) != 4:
-        raise ValueError("carve_gothic_window richiede una faccia quadrangolare")
+        raise ValueError("serve una faccia quadrangolare")
 
     center = face.calc_center_median()
-    normal = face.normal.copy().normalized()
+    normal = face.normal.copy()
+    if normal.length < 1e-9:
+        # Le facce appena create con bm.faces.new() hanno normale nulla finche'
+        # non si chiama bm.normal_update(): senza normale gli assi locali sono
+        # degeneri e la classificazione degli angoli fallisce.
+        raise ValueError("normale della faccia nulla: chiamare bm.normal_update() prima")
+    normal.normalize()
     up = Vector((0, 0, 1))
     right = normal.cross(up).normalized()
 
@@ -158,32 +216,279 @@ def carve_gothic_window(bm, face, half_w, v_bottom, v_spring, v_apex,
         return (d.dot(right) > 0, d.dot(up) > 0)
 
     corner = {corner_key(v): v for v in verts_loop}
-    BL, BR = corner[(False, False)], corner[(True, False)]
-    TR, TL = corner[(True, True)], corner[(False, True)]
+    if len(corner) != 4:
+        raise ValueError(f"la faccia non ha 4 angoli distinti negli assi locali: {sorted(corner)}")
 
     def P(u, v):
         return center + right * u + up * v
 
+    return (P, corner[(False, False)], corner[(True, False)],
+            corner[(True, True)], corner[(False, True)])
+
+
+def carve_outline(bm, face, outline_uv, corner_split):
+    """Apre un foro passante di contorno arbitrario in una faccia quadrangolare planare.
+
+    `outline_uv` sono i vertici del contorno in coordinate locali, in ordine
+    antiorario partendo dal basso a sinistra. `corner_split` dice quanti
+    spigoli del contorno competono a ciascuno dei 4 lati della faccia (la somma
+    deve fare il numero di vertici del contorno).
+
+    L'anello di riempimento e' ancorato SOLO ai 4 angoli della faccia: mettere
+    vertici nuovi sugli spigoli condivisi coi vicini creerebbe T-junction
+    non-manifold. Tutte le facce generate stanno nel piano della faccia
+    originale, quindi sono planari.
+    """
+    P, BL, BR, TR, TL = quad_frame(face)
+    W = [bm.verts.new(P(u, v)) for u, v in outline_uv]
+
+    n = len(W)
+    if sum(corner_split) != n:
+        raise ValueError("corner_split non copre tutto il contorno")
+
+    # Indici del contorno che coincidono con l'inizio di ciascun lato.
+    starts, acc = [], 0
+    for count in corner_split:
+        starts.append(acc)
+        acc += count
+
+    quad_corners = [BL, BR, TR, TL]
+    for side in range(4):
+        a = quad_corners[side]
+        b = quad_corners[(side + 1) % 4]
+        i0 = starts[side]
+        i1 = starts[(side + 1) % 4]
+        # vertici del contorno da i1 indietro fino a i0 (senso opposto al bordo)
+        span, j = [], i1
+        while True:
+            span.append(W[j % n])
+            if j % n == i0 % n:
+                break
+            j -= 1
+        bm.faces.new(tuple([a, b] + span))
+
+    bmesh.ops.delete(bm, geom=[face], context="FACES_ONLY")
+
+
+def carve_gothic_window(bm, face, half_w, v_bottom, v_spring, v_apex,
+                        shoulder_frac, shoulder_h):
+    """Apre una finestra ad arco a punta (faceted) in una faccia quadrangolare.
+
+    Il contorno ha 8 vertici: base rettangolare piu' arco a punta in 4 segmenti.
+    Il risultato e' un foro passante, cioe' il contorno resta come spigoli di
+    bordo: e' esattamente cio' che serve perche' Pepakura ritagli la sagoma.
+    Vedi la nota su WINDOW per il perche' non sia una tasca incassata.
+    """
     v_should = v_spring + (v_apex - v_spring) * shoulder_h
     u_should = half_w * shoulder_frac
     outline = [
-        (-half_w, v_bottom),
-        (0.0, v_bottom),
-        (half_w, v_bottom),
-        (half_w, v_spring),
-        (u_should, v_should),
-        (0.0, v_apex),
-        (-u_should, v_should),
-        (-half_w, v_spring),
+        (-half_w, v_bottom),      # 0 base sinistra    (angolo del lato inferiore)
+        (0.0, v_bottom),          # 1 base centro
+        (half_w, v_bottom),       # 2 base destra      (angolo del lato destro)
+        (half_w, v_spring),       # 3 imposta destra
+        (u_should, v_should),     # 4 spalla destra    (angolo del lato superiore)
+        (0.0, v_apex),            # 5 vertice dell'arco
+        (-u_should, v_should),    # 6 spalla sinistra  (angolo del lato sinistro)
+        (-half_w, v_spring),      # 7 imposta sinistra
     ]
-    W = [bm.verts.new(P(u, v)) for u, v in outline]
+    carve_outline(bm, face, outline, corner_split=(2, 2, 2, 2))
 
-    bm.faces.new((BL, BR, W[2], W[1], W[0]))
-    bm.faces.new((BR, TR, W[4], W[3], W[2]))
-    bm.faces.new((TR, TL, W[6], W[5], W[4]))
-    bm.faces.new((TL, BL, W[0], W[7], W[6]))
 
-    bmesh.ops.delete(bm, geom=[face], context="FACES_ONLY")
+def carve_slit(bm, face, half_w, v_center, half_h):
+    """Apre una feritoia: fessura verticale rettangolare passante."""
+    outline = [
+        (-half_w, v_center - half_h),
+        (half_w, v_center - half_h),
+        (half_w, v_center + half_h),
+        (-half_w, v_center + half_h),
+    ]
+    carve_outline(bm, face, outline, corner_split=(1, 1, 1, 1))
+
+
+def add_shaft_slits(obj, marks, slits=None, half_w=None, opening_top=0.95):
+    """Apre le feritoie sulle facce del fusto, sopra il varco della vaschetta."""
+    slits = list(SLITS if slits is None else slits)
+    half_w = SLIT_HALF_W if half_w is None else half_w
+
+    mesh = obj.data
+    bm = bmesh.new()
+    bm.from_mesh(mesh)
+    bm.faces.ensure_lookup_table()
+
+    carved = 0
+    for angle, v_center, half_h in slits:
+        face = face_at_z_span(bm, opening_top, marks["shaft_top"], angle_deg=angle)
+        if face is None:
+            continue
+        carve_slit(bm, face, half_w, v_center, half_h)
+        carved += 1
+        bm.faces.ensure_lookup_table()
+
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    bm.normal_update()
+    bm.to_mesh(mesh)
+    mesh.update()
+    bm.free()
+    # Ogni feritoia rettangolare aggiunge 4 spigoli di bordo (il suo contorno).
+    return {"slits": carved, "boundary_edges": carved * 4}
+
+
+def open_top_and_crenellate(obj, marks, heights=None):
+    """Apre la cima della torre e alza le merlature dal bordo del parapetto.
+
+    La cima va aperta perche' e' da li' che entrano i dadi. I merli sono
+    prolungamenti verticali dei pannelli del parapetto, complanari con essi:
+    nessun pezzo aggiuntivo da assemblare.
+    """
+    heights = list(MERLON_HEIGHTS if heights is None else heights)
+    mesh = obj.data
+    bm = bmesh.new()
+    bm.from_mesh(mesh)
+    bm.faces.ensure_lookup_table()
+    bm.verts.ensure_lookup_table()
+
+    top_z = max(v.co.z for v in bm.verts)
+    cap = next(
+        (f for f in bm.faces
+         if len(f.verts) == SIDES and all(abs(v.co.z - top_z) < 1e-6 for v in f.verts)),
+        None,
+    )
+    if cap is None:
+        raise RuntimeError("tappo superiore non trovato")
+    bmesh.ops.delete(bm, geom=[cap], context="FACES_ONLY")
+
+    ring = sorted(
+        (v for v in bm.verts if abs(v.co.z - top_z) < 1e-6),
+        key=lambda v: math.atan2(v.co.y, v.co.x),
+    )
+    if len(ring) != len(heights):
+        raise RuntimeError(f"il parapetto ha {len(ring)} lati ma sono date {len(heights)} altezze")
+
+    # Vertici condivisi per (vertice del bordo, altezza): merli adiacenti di pari
+    # altezza si fondono invece di duplicare lo spigolo verticale.
+    shared = {}
+
+    def top_vert(base, h):
+        key = (base.index, round(h, 6))
+        if key not in shared:
+            shared[key] = bm.verts.new(base.co + Vector((0, 0, h)))
+        return shared[key]
+
+    raised = 0
+    for i, h in enumerate(heights):
+        if h <= 0:
+            continue
+        v0, v1 = ring[i], ring[(i + 1) % len(ring)]
+        bm.faces.new((v0, v1, top_vert(v1, h), top_vert(v0, h)))
+        raised += 1
+
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    bm.normal_update()
+    bm.to_mesh(mesh)
+    mesh.update()
+    bm.free()
+
+    gaps = sum(1 for h in heights if h <= 0)
+    groups = sum(
+        1 for i, h in enumerate(heights)
+        if h > 0 and heights[i - 1] <= 0            # inizio di una sequenza di merli
+    )
+    return {
+        "merlon_faces": raised,
+        "merlon_groups": groups,
+        "gaps": gaps,
+        # bordi liberi introdotti: la cima di ogni vuoto, la cima di ogni
+        # pannello alzato, piu' i due fianchi verticali di ogni gruppo.
+        "boundary_edges": gaps + raised + 2 * groups,
+    }
+
+
+def add_perimeter_wall(merlons=None, gate=None, **overrides):
+    """Crea l'oggetto 'Muro': muretto di cinta merlato davanti alla torre.
+
+    Pannello ad arco sfaccettato con linguetta di incollaggio alla base,
+    merlatura in cima e un'apertura ad arco decorativa. Riusa le stesse due
+    tecniche del guscio: merli come prolungamento del pannello e foro passante
+    tramite `carve_outline`.
+    """
+    p = dict(WALL)
+    p.update(overrides)
+    merlons = list(WALL_MERLONS if merlons is None else merlons)
+    gate = dict(WALL_GATE) if gate is None else (dict(gate) if gate else None)
+
+    n = p["segments"]
+    if len(merlons) != n:
+        raise RuntimeError(f"{n} segmenti ma {len(merlons)} altezze di merlo")
+
+    mesh = bpy.data.meshes.new("Muro_mesh")
+    obj = bpy.data.objects.new("Muro", mesh)
+    bpy.context.collection.objects.link(obj)
+
+    bm = bmesh.new()
+    r_out = p["radius"]
+    r_in = r_out - p["foot_inward"]
+    h = p["base_height"]
+    a0, a1 = math.radians(p["angle_from"]), math.radians(p["angle_to"])
+
+    outer, inner, top = [], [], []
+    for i in range(n + 1):
+        a = a0 + (a1 - a0) * i / n
+        ca, sa = math.cos(a), math.sin(a)
+        outer.append(bm.verts.new(Vector((r_out * ca, r_out * sa, 0.0))))
+        inner.append(bm.verts.new(Vector((r_in * ca, r_in * sa, 0.0))))
+        top.append(bm.verts.new(Vector((r_out * ca, r_out * sa, h))))
+
+    panels = []
+    for i in range(n):
+        bm.faces.new((outer[i], outer[i + 1], inner[i + 1], inner[i]))   # linguetta
+        panels.append(bm.faces.new((outer[i], outer[i + 1], top[i + 1], top[i])))
+
+    shared = {}
+
+    def merlon_vert(base, height):
+        key = (id(base), round(height, 6))
+        if key not in shared:
+            shared[key] = bm.verts.new(base.co + Vector((0, 0, height)))
+        return shared[key]
+
+    raised = 0
+    for i, mh in enumerate(merlons):
+        if mh <= 0:
+            continue
+        bm.faces.new((top[i], top[i + 1], merlon_vert(top[i + 1], mh), merlon_vert(top[i], mh)))
+        raised += 1
+
+    bm.faces.ensure_lookup_table()
+    # Necessario prima di carve_*: le facce appena create hanno normale nulla.
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    bm.normal_update()
+
+    gate_edges = 0
+    if gate:
+        idx = gate.pop("segment")
+        carve_gothic_window(bm, panels[idx], **gate)
+        gate_edges = 8
+
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    bm.normal_update()
+    bm.to_mesh(mesh)
+    mesh.update()
+    bm.free()
+
+    gaps = sum(1 for mh in merlons if mh <= 0)
+    groups = sum(
+        1 for i, mh in enumerate(merlons)
+        if mh > 0 and (i == 0 or merlons[i - 1] <= 0)
+    )
+    return obj, {
+        "segments": n,
+        "merlon_faces": raised,
+        "merlon_groups": groups,
+        "gaps": gaps,
+        # linguetta interna (n) + 2 lati della linguetta + 2 lati del pannello
+        # + cima dei vuoti + profilo dei merli + contorno dell'apertura
+        "boundary_edges": n + 2 + 2 + gaps + raised + 2 * groups + gate_edges,
+    }
 
 
 def add_exit_ramp(face_angles=(-130.0, -90.0, -50.0), **overrides):
@@ -343,7 +648,7 @@ def build_tower():
     # Va rimosso tutto cio' che lo script rigenera, altrimenti rieseguirlo
     # accumula duplicati (Rampa.001, Rampa.002, ...).
     for name in list(bpy.data.objects.keys()):
-        if name in ("Torre", "Rampa") or name.startswith(("Merlone_", "Muro_", "Rampa.")):
+        if name in ("Torre", "Rampa", "Muro") or name.startswith(("Merlone_", "Muro.", "Rampa.")):
             bpy.data.objects.remove(bpy.data.objects[name], do_unlink=True)
     for m in list(bpy.data.meshes):
         if m.users == 0:
@@ -526,21 +831,35 @@ if __name__ == "__main__":
     torre, MARKS = build_tower()
     N_WINDOWS = add_keep_windows(torre, MARKS)
     TRAY = add_dice_tray(torre, MARKS)
+    SLITS_DONE = add_shaft_slits(torre, MARKS)
+    CROWN = open_top_and_crenellate(torre, MARKS)
     RAMPA = add_exit_ramp()
     RAMP_REPORT = check_mesh(RAMPA)
     RAMP_FIT = check_ramp_fits(RAMPA, torre)
+    MURO, WALL_INFO = add_perimeter_wall()
+    WALL_REPORT = check_mesh(MURO)
+    WALL_REPORT["expected_boundary_edges"] = WALL_INFO["boundary_edges"]
     REPORT = check_mesh(torre)
     # Bordi attesi, derivati dalla topologia delle aperture volute:
     #   8 per ogni finestra passante (il suo contorno);
     #   per la vaschetta con n settori: n bordi del suo lato aperto in alto,
     #   2 spigoli in cima ai fianchi, piu' il contorno del varco (2 verticali
-    #   piu' n in alto) = 2n + 4.
+    #   piu' n in alto) = 2n + 4;
+    #   piu' il profilo della merlatura e i contorni delle feritoie.
     _n = TRAY["tray_sectors"]
-    REPORT["expected_boundary_edges"] = N_WINDOWS * 8 + 2 * _n + 4
+    REPORT["expected_boundary_edges"] = (
+        N_WINDOWS * 8 + 2 * _n + 4
+        + CROWN["boundary_edges"]
+        + SLITS_DONE["boundary_edges"]
+    )
     refresh_viewport()
     print("marks:", MARKS)
     print("windows:", N_WINDOWS)
     print("tray:", TRAY)
+    print("slits:", SLITS_DONE)
+    print("crown:", CROWN)
     print("check torre:", REPORT)
     print("check rampa:", RAMP_REPORT)
     print("fit rampa:", RAMP_FIT["ok"], "margine minimo:", RAMP_FIT["worst_margin"])
+    print("muro:", WALL_INFO)
+    print("check muro:", WALL_REPORT)

@@ -13,6 +13,10 @@ Controllare la manifold-ness non basta per un modello papercraft. Vincoli impara
 
 **Fori passanti invece di tasche incassate.** Una finestra incassata sembra piu' ricca nel viewport ma nell'unfold diventa 9 pezzi per finestra (8 pareti sottili piu' il fondo). Alla scala di stampa prevista quelle pareti sono ~3 mm: inassemblabili a mano. Il foro passante costa 0 pezzi (Pepakura ritaglia solo la sagoma) e si puo' chiudere con un foglietto di carta velina colorata dietro, che fa da vetro. Regola generale: prima di modellare un dettaglio in rilievo, contare quanti pezzi diventa nell'unfold e quanto misurano davvero alla scala di stampa.
 
+**Dettagli in rilievo: prolungare il pannello, non aggiungere blocchi.** La carta ha spessore zero, quindi una merlatura e' semplicemente il muro che continua verso l'alto con il bordo a zigzag: si ritaglia il profilo e la striscia si piega tutta insieme, zero pezzi in piu'. Come blocchi separati sarebbero scatoline da ~9x6 mm alla scala di stampa, inassemblabili. Stesso ragionamento per un muretto di cinta: pannello a spessore zero con una linguetta orizzontale alla base da incollare (senza la linguetta un pannello a spessore zero non sta in piedi), non una scatola sottile con decine di facce minuscole.
+
+Vincolo che ne deriva: due merli adiacenti devono avere la stessa altezza. Se differiscono, al loro spigolo comune nascono due bordi liberi sovrapposti invece di una piega, cioe' due lembi di carta scollegati nello stesso punto. Con altezze uguali i vertici si condividono e i due merli si fondono in uno piu' largo.
+
 **Pezzi interni separati.** Elementi come la rampa interna conviene tenerli come oggetti separati: nel papercraft sono sotto-assemblaggi che si incollano dentro, e non obbligano a tagliare il guscio con piani inclinati (fonte di facce non planari).
 
 **Verificare gli incastri contro la mesh vera, non contro i raggi.** La torre e' un ennagono: le sue facce piatte passano piu' vicine all'asse del cerchio circoscritto. Confrontare "raggio del pezzo interno" con "raggio del guscio" da' un falso via libera. Serve un ray-cast dall'asse contro la mesh reale (`check_ramp_fits` in build_tower.py).

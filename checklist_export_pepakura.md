@@ -16,7 +16,7 @@ Rigenera il modello da dentro Blender:
 exec(open(r"E:\repos\PaperDiceTower\build_tower.py").read())
 ```
 
-Nel report devono valere **tutte** queste condizioni, per `Torre` e per `Rampa`:
+Nel report devono valere **tutte** queste condizioni, per `Torre`, `Rampa` e `Muro`:
 
 | campo | valore richiesto | perché conta |
 |---|---|---|
@@ -64,8 +64,8 @@ Attenzione a un falso allarme: i fianchi della vaschetta hanno normale **tangenz
 Tre trappole, tutte controintuitive:
 
 - **Non rimuovere l'interno cavo.** In un modello generico si consiglia di eliminare le facce interne nascoste, ma qui il guscio *deve* restare cavo: è lo scivolo dei dadi. Non usare `Select → All by Trait → Interior Faces` per "ripulire".
-- **Non giudicare la difficoltà dal numero di facce.** `Torre` ha 127 facce (12 triangoli, 77 quad, 38 n-gon) e `Rampa` 5. Un limite tipo "max 60 facce" non si applica: le 9 finestre passanti aggiungono facce ma **zero** pezzi da incollare. Quello che misura la fatica di assemblaggio è il numero di pezzi separati e la loro dimensione reale — un pezzo sotto i ~5 mm è il vero problema.
-- **Non convertire le finestre in tasche incassate** perché "sembrano più ricche" nel viewport: diventerebbero 9 pezzi per finestra, con pareti da 3 mm. Vedi `memory/reference_vincoli_papercraft.md`.
+- **Non giudicare la difficoltà dal numero di facce.** `Torre` ha 158 facce, `Muro` 21, `Rampa` 5. Un limite tipo "max 60 facce" non si applica: finestre e feritoie passanti aggiungono facce ma **zero** pezzi da incollare. Quello che misura la fatica di assemblaggio è il numero di pezzi separati e la loro dimensione reale — un pezzo sotto i ~5 mm è il vero problema.
+- **Non convertire finestre, feritoie o merlature in geometria in rilievo** perché "sembrano più ricche" nel viewport: le finestre diventerebbero 9 pezzi ciascuna con pareti da 3 mm, e i merli 4 scatoline da ~9×6 mm. Vedi `memory/reference_vincoli_papercraft.md`.
 
 ---
 
@@ -73,7 +73,7 @@ Tre trappole, tutte controintuitive:
 
 - `File → Export → Wavefront (.obj)`
 - Opzioni: **Forward = -Y**, **Up = Z** (orientamento standard per Pepakura)
-- Esporta **solo gli oggetti selezionati** e valuta se esportare `Torre` e `Rampa` in due file separati: sono due sotto-assemblaggi distinti e tenerli separati rende l'unfold più leggibile
+- Esporta **solo gli oggetti selezionati** e valuta se esportare `Torre`, `Rampa` e `Muro` in tre file separati: sono tre sotto-assemblaggi distinti e tenerli separati rende l'unfold più leggibile
 - Includi UV se hai già applicato texture
 
 ---
@@ -82,7 +82,7 @@ Tre trappole, tutte controintuitive:
 
 - Se l'unfold produce **schegge strette e allungate**, torna nel modello e allarga la faccia in quel punto (in `build_tower.py`, non a mano sulla mesh)
 - Se una faccia grande viene spezzata in troppi pezzi, valuta di unire facce adiacenti prima di ri-esportare
-- Controlla dove Pepakura mette le linguette attorno ai **fori delle finestre**: non deve generarne, sono tagli e non pieghe
+- Controlla dove Pepakura mette le linguette attorno ai **fori** (finestre, feritoie, apertura del muro) e al **profilo delle merlature**: non deve generarne, sono tagli e non pieghe
 
 ---
 
@@ -91,3 +91,5 @@ Tre trappole, tutte controintuitive:
 - **Finestre**: dietro va incollato un foglietto di **carta velina colorata** (ambra o blu) come vetro. Un pezzo piatto per finestra. Se prevedi un LED interno, la velina fa l'effetto vetrata illuminata.
 - **Interno scuro**: perché le finestre leggano scure come nella reference, la faccia interna del foglio va stampata scura, altrimenti si vede il retro bianco della carta attraverso i fori.
 - **Rampa**: è un sotto-assemblaggio a sé (cuneo chiuso di 5 facce, pendenza ~17°). Va incollata dentro il guscio **prima** di chiudere la torre, con il bordo basso a filo del varco.
+- **Muro di cinta**: la striscia orizzontale lungo il suo bordo inferiore è la linguetta di incollaggio, non un errore dell'unfold. Va piegata verso l'interno e incollata al piano d'appoggio: senza quella il pannello non sta in piedi.
+- **Merlature**: il profilo a zigzag in cima ai pannelli del parapetto e del muro è una linea di **taglio**. La striscia si piega ai soli spigoli verticali della torre.

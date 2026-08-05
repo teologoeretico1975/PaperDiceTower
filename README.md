@@ -22,15 +22,20 @@ Perché uno script e non solo il `.blend`: il file Blender è un binario opaco i
 
 ## Struttura del modello
 
-Oggetto `Torre` (guscio) e oggetto `Rampa` (pezzo interno separato).
+Tre oggetti, cioè tre sotto-assemblaggi distinti: `Torre` (guscio), `Rampa` (cuneo interno), `Muro` (cinta decorativa).
 
 - **Plinto**: base svasata con raggi irregolari, roccia semplificata a facce piatte.
-- **Fusto**: slanciato (rapporto altezza/larghezza ~3,5:1).
+- **Fusto**: slanciato (rapporto altezza/larghezza ~3,5:1), con 9 **feritoie** verticali passanti ad altezze alternate — alternarle evita di rimuovere carta lungo un unico anello del tubo, che è la parte portante.
 - **Silhouette a stadi**: tronchi di cono alternati a tratti cilindrici (tamburi). I tamburi sono quello che distingue una torre da un proiettile: senza tratti piatti tra un restringimento e l'altro il profilo legge come una curva continua.
 - **Corpo principale**: tamburo più largo del fusto, con 9 **finestre ad arco a punta passanti** (contorno faceted: base rettangolare più arco in 4 segmenti). Sono fori, non tasche: dietro si incolla carta velina colorata come "vetro".
 - **Varco e vaschetta**: apertura che attraversa plinto e base del fusto (il plinto da solo è troppo basso perché passi un dado), con vaschetta a settore radiale saldata a livello del suolo.
 - **Rampa**: cuneo inclinato ~17° che convoglia i dadi verso il varco, altrimenti su un pavimento piatto restano dentro.
-- **Parapetto**: mensola e fascia cilindrica in cima, dove poggeranno le merlature.
+- **Parapetto e merlature**: mensola e fascia cilindrica in cima, con la merlatura ottenuta prolungando i pannelli del parapetto. Cima aperta: è da lì che entrano i dadi.
+- **Muro di cinta**: arco sfaccettato davanti alla torre, merlato, con apertura ad arco decorativa e linguetta di incollaggio alla base.
+
+### Vincolo sulle merlature
+
+Due merli adiacenti devono avere la **stessa altezza**. Se differiscono, al loro spigolo comune nascono due bordi liberi sovrapposti invece di una piega: due lembi di carta scollegati nello stesso punto. Con altezze uguali i vertici si condividono e i merli si fondono in uno più largo.
 
 ## Struttura della cartella
 
@@ -41,4 +46,6 @@ Oggetto `Torre` (guscio) e oggetto `Rampa` (pezzo interno separato).
 
 ## Stato
 
-Fatti: silhouette, finestre, varco, vaschetta, rampa. Da fare: cima aperta con merlature, feritoie sul fusto basso, muro esterno decorativo.
+Geometria completa: silhouette, finestre, feritoie, varco, vaschetta, rampa, merlature, muro di cinta. Tutti i controlli passano (0 non-manifold, 0 facce non planari, bordi pari agli attesi su tutti e tre gli oggetti).
+
+Da fare: materiali/texture, prova di unfold in Pepakura, stampa di prova per verificare che i dadi passino davvero alla scala scelta.
