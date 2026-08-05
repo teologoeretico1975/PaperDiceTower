@@ -59,6 +59,20 @@ Attenzione a un falso allarme: i fianchi della vaschetta hanno normale **tangenz
 
 ---
 
+## 3-bis. Superfici interne in vista — da risolvere quando si applica una skin
+
+Le normali sono coerenti e corrette: 152 pareti verso l'esterno, 2 tangenziali (i fianchi della vaschetta, per costruzione), 0 verso l'interno. Le facce orizzontali a z=0 puntano in basso, ed è giusto: **l'interno della vaschetta è un unico spazio continuo con l'interno della torre**, collegato attraverso il varco, quindi il "sopra" del pianale è superficie interna. In Pepakura appare grigio perché guardandola dall'alto si vede il retro del foglio, come guardando dentro una scodella.
+
+Finché il modello è senza texture non cambia nulla. **Con una skin applicata sì**: la texture viene stampata sul lato verso cui punta la normale, quindi il pianale della vaschetta risulterebbe decorato sul lato che guarda il tavolo e bianco sul lato in vista — dove invece si appoggiano i dadi ed è la parte più guardata del modello.
+
+Tre modi per risolverlo, da valutare in fase di texture:
+
+1. **Girare le sole facce del pianale** dopo `recalc_face_normals`. Costa zero pezzi. Effetto collaterale: quelle 3 facce risultano di verso opposto rispetto al fondo del plinto con cui confinano — invisibile, perché il fondo del plinto guarda il tavolo e non si vede mai. Attenzione: un successivo "Recalculate Outside" in Blender annullerebbe la modifica, quindi va fatta come ultimo passo e documentata.
+2. **Pianale come pezzo separato**, da incollare sopra con il verso giusto. Un pezzo piatto in più, nessuna incoerenza nella mesh.
+3. **Lasciarlo bianco**, se la carta grezza passa per pavimento in pietra. Zero lavoro, resa più debole.
+
+Nota che il problema riguarda **solo** il pianale della vaschetta: gli altri interni (fusto, corpo principale) non si vedono, e per loro la carta bianca all'interno è la norma nel papercraft.
+
 ## 4. Cosa NON fare
 
 Tre trappole, tutte controintuitive:
