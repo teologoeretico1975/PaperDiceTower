@@ -36,14 +36,16 @@ Se `non_planar_faces` non è 0, la causa tipica è un quad tra due anelli di cui
 
 In Blender il modello è alto **6,5 unità** (scena in unità metriche, `scale_length = 1`). La conversione va decisa prima dell'export o impostata in Pepakura.
 
-| altezza torre stampata | 1 unità Blender = | larghezza finestra | altezza varco | interno del fusto |
-|---|---|---|---|---|
-| **20 cm** (consigliata) | 3,08 cm | 8 mm | 29 mm | 46 mm |
-| 15 cm | 2,31 cm | 6 mm | 22 mm | 35 mm |
+| altezza torre stampata | 1 unità Blender = | larghezza finestra | altezza varco | interno del fusto | feritoia |
+|---|---|---|---|---|---|
+| **30 cm** (riferimento) | 4,37 cm | 11,8 mm | 41,5 mm | 63,0 mm | 3,9 mm |
+| 20 cm | 2,92 cm | 7,9 mm | 27,7 mm | 42,0 mm | 2,6 mm |
 
-**Verifica che i dadi passino** con la scala scelta: un d20 misura ~20 mm. A 20 cm di torre il varco è 29 mm e l'interno 46 mm — comodi. A 15 cm il varco scende a 22 mm: passa a filo, e conviene provare con il dado più grosso del set prima di stampare tutto.
+**Verifica che i dadi passino** con la scala scelta: un d20 misura ~20 mm. Alla scala di riferimento il varco è 41,5 mm e l'interno 63 mm, quindi ampiamente comodi. A 20 cm il varco scende a 27,7 mm: passa, ma conviene provare col dado più grosso del set.
 
-Le finestre restano invece **troppo strette perché un dado esca** in entrambi i casi (6-8 mm), che è voluto.
+Le finestre restano **troppo strette perché un dado esca** a entrambe le scale, che è voluto.
+
+**Altezza massima: ~322 mm**, oltre la quale la striscia del corpo principale supera il lato lungo stampabile di un A4 e va divisa a mano. Verificabile con `check_page_fit(target_height_mm=...)`, che elenca l'ingombro di ogni pezzo srotolato.
 
 **Perché conta:** Pepakura scala in base alle unità del file. Sbagliare qui rende inutile tutto il resto, e non è recuperabile dopo la stampa.
 
@@ -186,7 +188,7 @@ Risultato atteso: 2 pagine A4, PDF vettoriale di ~27 KB.
 
 - **Finestre**: dietro va incollato un foglietto di **carta velina colorata** (ambra o blu) come vetro. Un pezzo piatto per finestra. Se prevedi un LED interno, la velina fa l'effetto vetrata illuminata.
 - **Interno scuro**: perché le finestre leggano scure come nella reference, la faccia interna del foglio va stampata scura, altrimenti si vede il retro bianco della carta attraverso i fori.
-- **Grammatura della carta**: **170-200 g/m²**. Sotto i 160 il fusto è un tubo troppo flessibile per reggere il corpo principale e il parapetto, e i dadi che cadono lo ammaccano. Sopra i 220 i pezzi piccoli diventano il problema opposto: le feritoie da 2,8 mm si sfrangiano al taglio, i merli da ~1 cm non piegano netti e le linguette non si appiattiscono. Se vuoi ottimizzare, i pezzi grandi e strutturali (fusto, corpo principale, plinto) stanno bene a 200 e quelli di dettaglio (parapetto con merlature, muro, rampa) a 160 — ma per un prodotto da vendere conviene una grammatura sola.
+- **Grammatura della carta**: **200 g/m²** alla scala di riferimento, con margine fino a ~250. I due limiti si sono spostati passando a 30 cm: il tetto superiore era la fragilità dei dettagli piccoli, che ora sono una volta e mezza più grandi (feritoie da 3,9 mm invece di 2,6), quindi si può salire; il limite inferiore invece si è alzato, perché una torre di 30 cm ha più peso da reggere e sotto i 180 g/m² il fusto flette. A 20 cm valeva invece 170-200 con tetto stretto.
 - **Incidere le pieghe prima di piegare**, con una stecca o il dorso di una lama. A 200 g/m² una piega non incisa si spacca o si arrotonda, e sul plinto le pieghe sono ravvicinate.
 - **Rampa**: è un sotto-assemblaggio a sé (cuneo chiuso di 5 facce, pendenza ~17°). Va incollata dentro il guscio **prima** di chiudere la torre, con il bordo basso a filo del varco.
 - **Muro di cinta**: la striscia orizzontale lungo il suo bordo inferiore è la linguetta di incollaggio, non un errore dell'unfold. Va piegata verso l'interno e incollata al piano d'appoggio: senza quella il pannello non sta in piedi.

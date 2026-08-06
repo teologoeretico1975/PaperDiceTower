@@ -17,7 +17,13 @@ from mathutils import Vector
 
 # --- Parametri ------------------------------------------------------------
 
-SIDES = 9
+# Versione di riferimento: 7 lati, stampata alta 300 mm (vedi REFERENCE_HEIGHT_MM).
+# La variante a 9 lati resta riproducibile con `build_all(sides=9)` ed e' quella
+# di `PaperDiceTower.blend`. Si e' scelto 7 perche' allarga i pannelli da 16,0 a
+# 20,2 mm, e i 300 mm perche' sono l'unica leva che allarga anche i dettagli
+# piccoli in valore assoluto: le feritoie passano da 2,6 a 3,9 mm.
+SIDES = 7
+REFERENCE_HEIGHT_MM = 300.0
 
 PLINTH_R = 1.10
 PLINTH_H = 0.45
@@ -972,7 +978,7 @@ def check_ramp_fits(ramp_obj, shell_obj, min_margin=0.04):
     }
 
 
-def export_for_pepakura(target_height_mm=200.0, out_dir=None,
+def export_for_pepakura(target_height_mm=None, out_dir=None,
                         names=("Torre", "Rampa", "Muro"), combined=True,
                         basename="PaperDiceTower"):
     """Esporta gli OBJ per Pepakura, scalati all'altezza di stampa richiesta.
@@ -1001,6 +1007,8 @@ def export_for_pepakura(target_height_mm=200.0, out_dir=None,
     """
     import os
 
+    if target_height_mm is None:
+        target_height_mm = REFERENCE_HEIGHT_MM
     if out_dir is None:
         out_dir = os.path.join(os.path.dirname(bpy.data.filepath), "export")
     os.makedirs(out_dir, exist_ok=True)
@@ -1057,6 +1065,88 @@ def export_for_pepakura(target_height_mm=200.0, out_dir=None,
         "forward_axis": "-Z",
         "area_mm2": area_mm2,
         "pagine_a4_teoriche": round(sum(area_mm2.values()) / a4_printable, 2),
+    }
+
+
+def check_page_fit(target_height_mm=None, sides=None, page_mm=(200.0, 287.0)):
+    """Stima se i pezzi srotolati entrano in una pagina, alla scala di stampa data.
+
+    Ogni anello della torre si srotola in una striscia lunga quanto il perimetro
+    del poligono e alta quanto la sua altezza (o l'apotema, per le rastremazioni).
+    Un pezzo non puo' essere spezzato a cavallo di due fogli, quindi il vincolo
+    che conta non e' l'area totale ma la **striscia piu' lunga**: se supera il
+    lato maggiore della pagina va divisa a mano in Pepakura.
+
+    `page_mm` e' l'area stampabile, non il formato: A4 con margini da 5 mm.
+    E' una stima del rettangolo di ingombro, senza linguette, e Pepakura resta
+    libero di annidare o dividere diversamente.
+    """
+    if target_height_mm is None:
+        target_height_mm = REFERENCE_HEIGHT_MM
+    sides = SIDES if sides is None else sides
+    scale = target_height_mm / (PLINTH_H + SHAFT_H + sum(h for h, _ in RINGS))
+
+    def chord(radius):
+        return 2.0 * radius * math.sin(math.pi / sides) * scale
+
+    def band_bbox(r_lo, r_hi, height):
+        """Ingombro del pezzo srotolato di una banda della torre.
+
+        Una banda cilindrica si srotola in un rettangolo esatto. Un tronco di
+        cono invece si srotola in un **settore anulare**, che si incurva su se
+        stesso: trattarlo come striscia rettilinea sovrastima molto il lato
+        lungo (per il plinto di un fattore 2,5).
+        """
+        if abs(r_lo - r_hi) < 1e-9:
+            return sides * chord(r_lo), height * scale
+        slant = math.hypot(height, r_lo - r_hi)
+        dr = abs(r_lo - r_hi)
+        rho_out = slant * max(r_lo, r_hi) / dr
+        rho_in = slant * min(r_lo, r_hi) / dr
+        theta = 2.0 * math.pi * dr / slant          # apertura del settore
+        pts = []
+        for i in range(65):
+            a = -theta / 2.0 + theta * i / 64.0
+            for rho in (rho_in, rho_out):
+                pts.append((rho * math.cos(a), rho * math.sin(a)))
+        xs = [p[0] for p in pts]
+        ys = [p[1] for p in pts]
+        return (max(xs) - min(xs)) * scale, (max(ys) - min(ys)) * scale
+
+    bands = []
+    r_bottom = PLINTH_R + max(plinth_jag(sides))
+    bands.append(("plinto (catena)", *band_bbox(r_bottom, SHAFT_R, PLINTH_H)))
+    bands.append(("fondo del plinto", 2 * r_bottom * scale, 2 * r_bottom * scale))
+    bands.append(("fusto", sides * chord(SHAFT_R), (SHAFT_H - 0.95 + PLINTH_H) * scale))
+    r_prev = SHAFT_R
+    for i, (h, r) in enumerate(RINGS):
+        bands.append((f"anello {i}", *band_bbox(r_prev, r, h)))
+        r_prev = r
+
+    wall_span = abs(tray_face_angles(sides)[-1] - tray_face_angles(sides)[0]) \
+        + 2 * half_face_angle(sides)
+    wall_segs = max(3, int(round(wall_span / WALL_SEGMENT_DEG)) | 1)
+    wall_len = wall_segs * 2 * WALL["radius"] * math.sin(
+        math.radians(wall_span / wall_segs) / 2) * scale
+    bands.append(("muro", wall_len,
+                  (WALL["base_height"] + 0.20 + WALL["foot_inward"]) * scale))
+
+    page_short, page_long = sorted(page_mm)
+    rows, oversize = [], []
+    for name, length, height in bands:
+        long_side, short_side = max(length, height), min(length, height)
+        fits = long_side <= page_long and short_side <= page_short
+        rows.append({"pezzo": name, "mm": [round(length), round(height)], "entra": fits})
+        if not fits:
+            oversize.append(name)
+
+    return {
+        "target_height_mm": target_height_mm,
+        "sides": sides,
+        "pagina_stampabile_mm": list(page_mm),
+        "pezzi": rows,
+        "fuori_misura": oversize,
+        "ok": not oversize,
     }
 
 

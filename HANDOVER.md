@@ -14,15 +14,17 @@ Torre dadi fantasy low-poly modellata in Blender, destinata a essere **unfoldata
 
 **Geometria completa e validata. Unfold verificato in Pepakura. Manca la prova di assemblaggio da stampa.**
 
-Esistono **due varianti**, entrambe generate dallo stesso script: `PaperDiceTower.blend` a 9 lati e `PaperDiceTower7.blend` a 7 lati, quest'ultima nata per rendere le pieghe meno fitte su carta pesante (pannelli del fusto da 20,2 mm invece di 16,0). Confronto completo nel README.
+**Versione di riferimento: 7 lati, stampata alta 300 mm** — `PaperDiceTower7.blend`, ed è il default dello script. `PaperDiceTower.blend` a 9 lati è conservato come variante, riproducibile con `build_all(sides=9)`.
 
-| oggetto | ruolo | facce (9 lati) | facce (7 lati) |
+| oggetto | ruolo | facce (riferimento, 7 lati) | facce (9 lati) |
 |---|---|---|---|
-| `Torre` | guscio | 158 | 123 |
-| `Muro` | cinta decorativa | 21 | 16 |
+| `Torre` | guscio | 123 | 158 |
+| `Muro` | cinta decorativa | 16 | 21 |
 | `Rampa` | cuneo interno | 5 | 5 |
 
 Su entrambe: 0 non-manifold, 0 facce non planari, bordi pari agli attesi, rampa dentro le pareti.
+
+Perché 7 lati **e** 300 mm, e non uno dei due: ridurre le facce allarga solo i pannelli (16,0 → 20,2 mm), mentre feritoie e soglie restano invariate perché sono misure assolute. Solo la scala allarga anche quelle (feritoia 2,6 → 3,9 mm). Le due leve non sono alternative. Confronto completo nel README.
 
 Verificato in Pepakura: scala 200 mm corretta, orientamento in piedi, nessun pezzo a scheggia, fori trattati come tagli e non come pieghe, nessuna sovrapposizione.
 
@@ -64,18 +66,22 @@ Il "perché" completo di ognuna è in `memory/reference_vincoli_papercraft.md` e
 
 Da tenere d'occhio, in ordine di rischio, con il parametro da cambiare se cede:
 
+Misure alla scala di riferimento (7 lati, 300 mm):
+
 | # | punto | misura | parametro |
 |---|---|---|---|
-| 1 | feritoie, le più fragili al taglio | 2,8 mm | `SLIT_HALF_W` |
-| 2 | catena di triangoli del plinto: molte pieghe ravvicinate | — | `PLINTH_JAG` |
-| 3 | varco di uscita, provare col d20 più grosso | 29 mm | `opening_top` in `add_dice_tray` |
-| 4 | soglia dell'apertura del muro | 2,3 mm | `WALL_GATE["v_bottom"]` |
+| 1 | feritoie, le più fragili al taglio | 3,9 mm | `SLIT_HALF_W` |
+| 2 | soglia dell'apertura del muro | 3,3 mm | `WALL_GATE["v_bottom"]` |
+| 3 | catena di triangoli del plinto: pieghe ravvicinate | — | `PLINTH_JAG` |
+| 4 | varco di uscita, provare col d20 più grosso | 41,5 mm | `opening_top` in `add_dice_tray` |
+
+Il varco a 41,5 mm contro un d20 da ~20 mm ha ora ampio margine, quindi il rischio si è spostato sui due dettagli più sottili.
 
 **Conviene raccogliere più correzioni e applicarle in un colpo solo** invece di iterare una alla volta: rigenerare il modello ed esportare costa due minuti, ma rifare l'impaginazione in Pepakura ne costa ~15 perché non è salvabile (vedi sotto).
 
 Vincolo di montaggio che nasce dalla geometria: **la rampa va incollata dentro prima di chiudere il fusto**, dopo non passa più dalla cima.
 
-Carta **170-200 g/m²**: sotto i 160 il fusto flette sotto il peso della parte alta, sopra i 220 le feritoie da 2,8 mm si sfrangiano e i merli non piegano netti. Incidere le pieghe prima di piegare.
+Carta **200 g/m²**, e alla scala di riferimento si può salire fino a ~250: il vincolo superiore era la fragilità dei dettagli piccoli, che a 300 mm sono cresciuti di una volta e mezza (feritoie da 3,9 mm invece di 2,6). Il vincolo inferiore invece si è irrigidito: una torre di 30 cm ha più peso da reggere, quindi sotto i 180 g/m² il fusto flette. Incidere le pieghe prima di piegare.
 
 **Attenzione a un vincolo operativo:** con la versione gratuita di Pepakura non si può salvare il `.pdo`. Ogni reimport dell'OBJ azzera impostazioni e impaginazione, che vanno rifatte a mano (~15 minuti). Quindi: **fare tutto in una sessione sola**. Per questo in `export/` sono versionati anche i PDF e gli screenshot dei layout: sono l'unico record di quel lavoro, e da lì si ricostruisce la disposizione invece di ripartire da zero. La ricetta dei passaggi è la sezione 6 di `checklist_export_pepakura.md`. Se il progetto va in vendita la licenza si ripaga subito.
 

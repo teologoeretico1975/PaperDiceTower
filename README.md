@@ -20,25 +20,42 @@ exec(open(r"E:\repos\PaperDiceTower\build_tower.py").read())
 
 I parametri (proporzioni, finestre, vaschetta, rampa, merlature, muro) sono in cima a [build_tower.py](build_tower.py). Lo script stampa un report di verifica ed è idempotente: cancella e ricrea gli oggetti che genera.
 
-### Le due varianti
+### Versione di riferimento: 7 lati, alta 300 mm
 
-Lo script è parametrico nel numero di facce: `build_all(sides=9)` produce la versione originale, `build_all(sides=7)` quella semplificata. Tutto ciò che dipende dal numero di facce — sporgenze del plinto, angoli delle feritoie, settore della vaschetta, altezze dei merli, segmenti del muro — viene ricavato e non scritto a mano.
+È quella di `PaperDiceTower7.blend`, ed è il default dello script (`SIDES = 7`, `REFERENCE_HEIGHT_MM = 300`). La variante a 9 lati resta riproducibile con `build_all(sides=9)` ed è quella di `PaperDiceTower.blend`.
 
-| | 9 lati | 7 lati |
-|---|---|---|
-| facce (torre + muro + rampa) | 184 | 144 |
-| finestre / feritoie | 9 / 9 | 7 / 7 |
-| triangoli del plinto | 18 | 14 |
-| larghezza pannello del fusto | 16,0 mm | **20,2 mm** |
-| larghezza segmento del muro | 24,3 mm | **29,2 mm** |
-| carta | 44.527 mm² | 43.040 mm² |
+Ci si è arrivati per rendere il modello montabile su carta da 170-200 g/m². Le due modifiche fanno lavori **diversi e non sostituibili**:
 
-La variante a 7 lati nasce dal fatto che piegare carta da 170-200 g/m² su pannelli da 16 mm è faticoso. Il risparmio di carta è marginale (−5%): il guadagno vero sono i pannelli più larghi, cioè meno pieghe e più distanziate.
+| | 9 lati / 20 cm | 7 lati / 20 cm | **7 lati / 30 cm** |
+|---|---|---|---|
+| pannello del fusto | 16,0 mm | 20,2 mm | **30,4 mm** |
+| pannello del parapetto | 12,6 mm | 15,9 mm | **23,9 mm** |
+| larghezza feritoia | 2,6 mm | 2,6 mm | **3,9 mm** |
+| soglia apertura muro | 2,2 mm | 2,2 mm | **3,3 mm** |
+| pagine A4 | 2 | 2 | 4 (3 impaginando a mano) |
+
+Ridurre le facce allarga **solo i pannelli**: feritoie e soglie non cambiano, perché sono misure assolute e non frazioni del perimetro. Solo l'aumento di scala allarga anche quelle. Chi in futuro volesse "semplificare" riducendo ancora le facce non otterrebbe nulla sui dettagli fragili.
+
+Il modello a 9 lati è conservato perché il confronto sopra è l'unica traccia del perché queste scelte sono state fatte.
+
+### Misure a 300 mm
+
+| | |
+|---|---|
+| varco di uscita | 41,5 mm (un d20 misura ~20 mm) |
+| interno del fusto | 63,0 mm |
+| finestra | 11,8 × 42,0 mm |
+| feritoia | 3,9 × 35,0 mm |
+| vaschetta | profonda 45,9 mm, pareti 19,7 mm |
+| rampa | dislivello 21,0 mm, larga 39,4 mm al varco |
+
+Altezza massima stampabile senza dividere pezzi: **~322 mm** (limite dato dalla striscia del corpo principale contro il lato lungo di un A4). Verificabile con `check_page_fit(target_height_mm=...)`.
 
 Per generare gli OBJ da aprire in Pepakura, dopo lo script:
 
 ```python
-export_for_pepakura(target_height_mm=200)
+export_for_pepakura()                                   # riferimento: 7 lati a 300 mm
+export_for_pepakura(target_height_mm=200, basename="PaperDiceTower7")   # altra taglia
 ```
 
 Scrive `export/PaperDiceTower.obj` con tutti i sotto-assemblaggi in un file solo e la scala già applicata (i numeri nell'OBJ sono millimetri). Un file solo perché Pepakura occupa almeno una pagina per documento: tre file separati significherebbero tre pagine di cui due quasi bianche. Vedi [checklist_export_pepakura.md](checklist_export_pepakura.md).

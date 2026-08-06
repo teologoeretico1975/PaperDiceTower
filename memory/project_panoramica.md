@@ -7,7 +7,11 @@ metadata:
 
 Torre dadi fantasy low-poly modellata in Blender, da esportare e unfoldare con Pepakura in un prodotto papercraft destinato alla vendita su Etsy. Reference fornite dall'utente: una torre dadi pieghevole in legno tagliato al laser, poi una torre in resina con base rocciosa, finestre ad arco e muro perimetrale.
 
-**Due varianti dallo stesso script:** `PaperDiceTower.blend` a 9 lati e `PaperDiceTower7.blend` a 7 lati (`build_all(sides=7)`). La seconda nasce da un'osservazione dell'utente: il modello sembrava troppo complesso da piegare su carta da 170-200 g/m². Il risparmio di carta è marginale (−5%), il guadagno vero sono i pannelli più larghi — fusto da 20,2 mm invece di 16,0, segmenti del muro da 29,2 invece di 24,3 — cioè pieghe meno fitte. Tutto ciò che dipende dal numero di facce viene ricavato dai generatori in cima allo script, e il modello a 9 lati resta riproducibile identico (verificato: 222 vertici, 398 spigoli, 158 facce).
+**Versione di riferimento scelta dall'utente il 2026-08-06: 7 lati, stampata alta 300 mm** (`PaperDiceTower7.blend`, default dello script). `PaperDiceTower.blend` a 9 lati resta come variante, riproducibile identica con `build_all(sides=9)` (verificato: 222 vertici, 398 spigoli, 158 facce).
+
+**Perché servivano entrambe le leve, e questo va capito prima di "semplificare" ancora:** ridurre le facce allarga solo i pannelli (fusto 16,0 → 20,2 mm) perche' sono frazioni del perimetro. Feritoie, soglie e altri dettagli piccoli sono **misure assolute** e non cambiano affatto: restano a 2,6 e 2,2 mm. Solo l'aumento di scala li allarga (feritoia 2,6 → 3,9 mm). Chi in futuro riducesse ancora le facce non otterrebbe nulla sui dettagli fragili, che sono il vero limite del ritaglio a mano.
+
+Costo della scelta: 4 pagine A4 invece di 2 (3 impaginando a mano), e area della carta che cresce col quadrato della scala.
 
 **Il modello si rigenera dallo script, non si modifica a mano.** `build_tower.py` in radice del repo è la fonte di verità: contiene i parametri in cima, le funzioni di costruzione e i controlli di validità. Da dentro Blender: `exec(open(r"E:\repos\PaperDiceTower\build_tower.py").read())`. È idempotente (cancella e ricrea gli oggetti che genera).
 
