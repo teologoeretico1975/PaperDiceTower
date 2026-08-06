@@ -123,7 +123,7 @@ Due pagine è anche il minimo teorico: l'area dei pezzi è 44.527 mm² contro 48
 
 ### Opzioni di visualizzazione che contano
 
-Nel pannello *Display Options* di Edit Mode:
+Perché servono. Per la sequenza operativa vedi la ricetta nella sezione 6. Nel pannello *Display Options* di Edit Mode:
 
 - **`Check Overlapping Parts`**: è un'opzione di visualizzazione, non un comando da lanciare. Tenerla attiva **mentre** si dispongono i pezzi: evidenzia le sovrapposizioni in tempo reale. Un pezzo annidato nel foro di un altro (es. la striscia merlata dentro l'anello) non è un errore ma buon impacchettamento, e questa opzione permette di distinguere i due casi.
 - **`Hide nearly flat folding lines`** con soglia 175°: da tenere attiva. Questo modello ha facce complanari (i pannelli dei merli continuano il parapetto sottostante), e le pieghe a 180° non vanno disegnate perché lì la carta resta piatta.
@@ -142,7 +142,39 @@ Cosa fa e perché:
 
 ---
 
-## 6. In Pepakura
+## 6. Versione gratuita di Pepakura: niente salvataggio
+
+**Vincolo operativo da conoscere prima di iniziare.** Nella versione gratuita/non licenziata `Save` e `Save As...` sono disattivati: **non si può salvare il `.pdo`**. Ogni volta che si chiude il file e si reimporta l'OBJ, tutte le impostazioni e tutta l'impaginazione vanno rifatte a mano. L'export in PDF invece funziona.
+
+Conseguenze pratiche:
+
+- **Fare tutto il lavoro in una sessione sola.** Chiudere Pepakura equivale a buttare l'impaginazione.
+- **Il PDF esportato è l'unico artefatto che sopravvive.** Va conservato: serve sia per stampare sia come riferimento visivo per ricostruire la disposizione dei pezzi la volta successiva.
+- Conviene anche **tenere uno screenshot del layout finale**: ricostruire a occhio la posizione di ~13 pezzi da un PDF è più lento che copiarla da un'immagine.
+- La regola `export/*.pdo` nel `.gitignore` esiste per completezza, ma finché si usa la versione gratuita quel file non viene nemmeno prodotto.
+- Se il progetto va in vendita, **la licenza si ripaga da sola**: ogni ritocco al modello significa rifare da zero un'impaginazione di ~15 minuti, e ogni variante futura (dimensioni diverse, versioni a tema) la stessa cosa.
+
+### Ricetta da riapplicare a ogni reimport
+
+Nell'ordine, dopo aver aperto `export/PaperDiceTower.obj`:
+
+| # | dove | cosa |
+|---|---|---|
+| 1 | `File` | `Switch to Designer Mode`, se presente in fondo al menu (in modalità ridotta i comandi di layout non ci sono) |
+| 2 | `Settings` → `Page...` | *Paper Size* = **A4**; margini **Left & Right = 5**, **Top & Bottom = 5** (il default è 15 e costa il 19% di area utile) |
+| 3 | `Settings` → `Print...` | **`Print lines clearly (Vector print)`** — il default è bitmap, che rasterizza tutto a ~140 DPI |
+| 4 | *Display Options* (Edit Mode) | attivare **`Edge ID`**, **`Page Number`**, **`Check Overlapping Parts`**, **`Hide nearly flat folding lines`** (soglia 175°); `Flaps` è già attivo |
+| 5 | — | verificare che la **scala** dica **200 mm** di altezza |
+| 6 | `2D Layout` → `Re-layout Parts...` | prima passata automatica: si ferma a 4 pagine |
+| 7 | pannello 2D | **disporre a mano** fino a 2 pagine: appaiare le due strisce grandi (corpo principale ~192×52 mm e fusto ~169×104 mm) nello stesso verso sulla prima pagina; base, muro, rampa e vaschetta sulla seconda. Ruotare di 90° la catena del plinto (~215 mm, più larga di un A4 in verticale) |
+| 8 | — | controllare che `Check Overlapping Parts` non evidenzi nulla |
+| 9 | `File` → `Print to PDF...` | `Ctrl+Shift+P` |
+
+Risultato atteso: 2 pagine A4, PDF vettoriale di ~27 KB.
+
+---
+
+## 7. In Pepakura
 
 - Se l'unfold produce **schegge strette e allungate**, torna nel modello e allarga la faccia in quel punto (in `build_tower.py`, non a mano sulla mesh)
 - Se una faccia grande viene spezzata in troppi pezzi, valuta di unire facce adiacenti prima di ri-esportare
@@ -150,7 +182,7 @@ Cosa fa e perché:
 
 ---
 
-## 7. Assemblaggio — note che nascono dal modello
+## 8. Assemblaggio — note che nascono dal modello
 
 - **Finestre**: dietro va incollato un foglietto di **carta velina colorata** (ambra o blu) come vetro. Un pezzo piatto per finestra. Se prevedi un LED interno, la velina fa l'effetto vetrata illuminata.
 - **Interno scuro**: perché le finestre leggano scure come nella reference, la faccia interna del foglio va stampata scura, altrimenti si vede il retro bianco della carta attraverso i fori.

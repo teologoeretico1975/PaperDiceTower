@@ -67,11 +67,13 @@ Da tenere d'occhio, in ordine di rischio, con il parametro da cambiare se cede:
 | 3 | varco di uscita, provare col d20 più grosso | 29 mm | `opening_top` in `add_dice_tray` |
 | 4 | soglia dell'apertura del muro | 2,3 mm | `WALL_GATE["v_bottom"]` |
 
+**Conviene raccogliere più correzioni e applicarle in un colpo solo** invece di iterare una alla volta: rigenerare il modello ed esportare costa due minuti, ma rifare l'impaginazione in Pepakura ne costa ~15 perché non è salvabile (vedi sotto).
+
 Vincolo di montaggio che nasce dalla geometria: **la rampa va incollata dentro prima di chiudere il fusto**, dopo non passa più dalla cima.
 
 Carta **170-200 g/m²**: sotto i 160 il fusto flette sotto il peso della parte alta, sopra i 220 le feritoie da 2,8 mm si sfrangiano e i merli non piegano netti. Incidere le pieghe prima di piegare.
 
-Il `.pdo` con l'impaginazione già rifinita **non è nel repo** (gli artefatti Pepakura sono ignorati): se serve rifarla, i passaggi sono in `checklist_export_pepakura.md`. In sintesi: margini a 5 mm in `Settings` → `Page...`, `2D Layout` → `Re-layout Parts...`, poi sistemare a mano — l'automatico si ferma a 4 pagine. Per la versione da vendere, attivare `Edge ID`.
+**Attenzione a un vincolo operativo:** con la versione gratuita di Pepakura non si può salvare il `.pdo`. Ogni reimport dell'OBJ azzera impostazioni e impaginazione, che vanno rifatte a mano (~15 minuti). Quindi: **fare tutto in una sessione sola**, conservare il PDF esportato e uno screenshot del layout come riferimento. La ricetta completa dei passaggi da riapplicare è la sezione 6 di `checklist_export_pepakura.md`. Se il progetto va in vendita la licenza si ripaga subito, perché ogni ritocco al modello impone di rifare l'impaginazione da zero.
 
 ## 6. Poi: materiali e texture
 

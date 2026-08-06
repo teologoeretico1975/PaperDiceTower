@@ -5,4 +5,5 @@
 - [Vincoli papercraft](reference_vincoli_papercraft.md) — planarità, fori vs tasche, costo di assemblaggio, verifica degli incastri
 - [Insidie bmesh.ops](reference_bmesh_lessons.md) — extrude che lascia facce fantasma, wire edge orfani, liste duplicate, normali nulle
 - [gitignore vs file .obj](reference_gitignore_obj.md) — il template Visual Studio esclude *.obj: gli export sparivano dai commit senza errori
+- [Pepakura in versione gratuita](reference_pepakura_free.md) — non salva il .pdo: ogni reimport azzera impaginazione e impostazioni, quindi accorpare le correzioni
 - [Add-on connettore Blender](reference_blender_mcp_addon.md) — dove scaricarlo e come installarlo se la connessione si rompe
