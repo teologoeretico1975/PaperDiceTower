@@ -47,6 +47,7 @@ Sono controintuitive e sono già costate un giro di correzioni ciascuna.
 - **Due merli adiacenti devono avere la stessa altezza.** Se differiscono, al loro spigolo comune nascono due bordi liberi sovrapposti invece di una piega.
 - **La planarità va controllata, non solo la manifold-ness.** Una faccia svergolata non si piega combaciando, e il controllo di manifold-ness non la vede.
 - **La vaschetta è un settore radiale a livello del suolo.** Radiale perché così i fianchi sono complanari; a livello del suolo perché sospesa i dadi restavano dentro.
+- **Si esporta un OBJ solo con tutti i sotto-assemblaggi, non uno per oggetto.** Pepakura occupa almeno una pagina per documento: `Muro` e `Rampa` riempiono l'8% e il 6% di un A4, quindi con file separati si stampano tre pagine di cui due quasi bianche. Lo spreco di carta è una dimensione di costo da misurare come le altre.
 - **`export/`**: gli `.obj` si versionano, ciò che Pepakura produce (`.pdo`, `.pdf`) è ignorato.
 
 Il "perché" completo di ognuna è in `memory/reference_vincoli_papercraft.md` e `memory/project_panoramica.md`.

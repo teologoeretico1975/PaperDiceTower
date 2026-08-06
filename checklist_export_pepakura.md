@@ -91,7 +91,20 @@ Automatizzato. Dopo aver eseguito lo script:
 export_for_pepakura(target_height_mm=200)
 ```
 
-Scrive `export/Torre.obj`, `export/Rampa.obj`, `export/Muro.obj` — un file per sotto-assemblaggio, così l'unfold resta leggibile.
+Scrive `export/PaperDiceTower.obj` con tutti i sotto-assemblaggi in un file solo.
+
+**Un file solo, non tre.** Pepakura crea un documento per file, e ogni documento occupa almeno una pagina. Misurando le aree a 200 mm di altezza:
+
+| pezzo | area | % di un A4 |
+|---|---|---|
+| Torre | 36.858 mm² | 70,0% |
+| Muro | 4.434 mm² | 8,4% |
+| Rampa | 3.235 mm² | 6,1% |
+| **totale** | **44.527 mm²** | **85%** |
+
+Con tre file si stampano tre pagine di cui due quasi bianche. Nel file unico Pepakura annida i pezzi sugli stessi fogli tenendoli comunque distinti e numerati: il totale sta in ~1 pagina più le linguette (che aggiungono il 15-25%), quindi 2 pagine ben riempite invece di 3 sprecate.
+
+Per ristampare un solo pezzo: `export_for_pepakura(combined=False)` torna a un file per oggetto.
 
 Cosa fa e perché:
 

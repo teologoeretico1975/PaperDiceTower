@@ -26,7 +26,7 @@ Per generare gli OBJ da aprire in Pepakura, dopo lo script:
 export_for_pepakura(target_height_mm=200)
 ```
 
-Scrive un file per sotto-assemblaggio in `export/`, con la scala già applicata (i numeri nell'OBJ sono millimetri). Vedi [checklist_export_pepakura.md](checklist_export_pepakura.md).
+Scrive `export/PaperDiceTower.obj` con tutti i sotto-assemblaggi in un file solo e la scala già applicata (i numeri nell'OBJ sono millimetri). Un file solo perché Pepakura occupa almeno una pagina per documento: tre file separati significherebbero tre pagine di cui due quasi bianche. Vedi [checklist_export_pepakura.md](checklist_export_pepakura.md).
 
 Perché uno script e non solo il `.blend`: il file Blender è un binario opaco in git, mentre lo script rende le modifiche leggibili in diff, le proporzioni ritoccabili in una riga, e permette a un collega di ricostruire il modello dal repo.
 

@@ -819,8 +819,18 @@ def check_ramp_fits(ramp_obj, shell_obj, min_margin=0.04):
     }
 
 
-def export_for_pepakura(target_height_mm=200.0, out_dir=None, names=("Torre", "Rampa", "Muro")):
-    """Esporta un OBJ per oggetto, scalato all'altezza di stampa richiesta.
+def export_for_pepakura(target_height_mm=200.0, out_dir=None,
+                        names=("Torre", "Rampa", "Muro"), combined=True):
+    """Esporta gli OBJ per Pepakura, scalati all'altezza di stampa richiesta.
+
+    Per default scrive un file solo con tutti i sotto-assemblaggi. Con file
+    separati Pepakura crea un documento per file, e ogni documento occupa almeno
+    una pagina: misurando le aree, `Torre` riempie il 70% di un A4 ma `Muro`
+    l'8% e `Rampa` il 6%, quindi si stampano tre pagine di cui due quasi bianche.
+    Nel file unico Pepakura annida i pezzi sugli stessi fogli tenendoli
+    comunque distinti e numerati, e il totale sta in ~1 pagina piu' le linguette.
+    `combined=False` torna a un file per oggetto (utile per ristampare un solo
+    pezzo).
 
     La scala si applica in fase di export (`global_scale`) invece di ridimensionare
     gli oggetti: il modello sul disco resta in unita' di lavoro e si puo' esportare
@@ -846,12 +856,11 @@ def export_for_pepakura(target_height_mm=200.0, out_dir=None, names=("Torre", "R
     height_units = max(z_all) - min(z_all)
     scale = target_height_mm / height_units
 
-    written = {}
-    for o in objs:
+    def write(path, selection):
         bpy.ops.object.select_all(action="DESELECT")
-        o.select_set(True)
-        bpy.context.view_layer.objects.active = o
-        path = os.path.join(out_dir, f"{o.name}.obj")
+        for o in selection:
+            o.select_set(True)
+        bpy.context.view_layer.objects.active = selection[0]
         bpy.ops.wm.obj_export(
             filepath=path,
             export_selected_objects=True,
@@ -862,16 +871,37 @@ def export_for_pepakura(target_height_mm=200.0, out_dir=None, names=("Torre", "R
             export_uv=False,
             export_materials=False,
         )
-        written[o.name] = path
+        return path
+
+    written = {}
+    if combined:
+        written["PaperDiceTower"] = write(
+            os.path.join(out_dir, "PaperDiceTower.obj"), objs)
+    else:
+        for o in objs:
+            written[o.name] = write(os.path.join(out_dir, f"{o.name}.obj"), [o])
 
     bpy.ops.object.select_all(action="DESELECT")
+
+    # Area delle facce in mm2, per stimare quante pagine servono davvero.
+    area_mm2 = {}
+    for o in objs:
+        bm = bmesh.new()
+        bm.from_mesh(o.data)
+        area_mm2[o.name] = round(sum(f.calc_area() for f in bm.faces) * scale ** 2)
+        bm.free()
+    a4_printable = 190 * 277
+
     return {
         "files": written,
+        "combined": combined,
         "height_units": round(height_units, 4),
         "target_height_mm": target_height_mm,
         "global_scale": round(scale, 4),
         "up_axis": "Y",          # convenzione OBJ standard: la Z di Blender diventa Y
         "forward_axis": "-Z",
+        "area_mm2": area_mm2,
+        "pagine_a4_teoriche": round(sum(area_mm2.values()) / a4_printable, 2),
     }
 
 
