@@ -20,6 +20,7 @@ Torre dadi fantasy low-poly modellata in Blender, destinata a essere **unfoldata
 |---|---|---|---|
 | `Torre` | guscio | 123 | 158 |
 | `Muro` | cinta decorativa | 16 | 21 |
+| `Deflettori` | 4 strisce corrugate interne | 16 | 16 |
 | `Rampa` | cuneo interno | 5 | 5 |
 
 Su entrambe: 0 non-manifold, 0 facce non planari, bordi pari agli attesi, rampa dentro le pareti.
@@ -54,6 +55,8 @@ Sono controintuitive e sono già costate un giro di correzioni ciascuna.
 - **La silhouette ha tratti cilindrici (tamburi) tra un restringimento e l'altro.** Senza, il profilo legge come un proiettile. Vale anche il rapporto: a 2,3:1 sembrava un macinapepe, ora è ~3,5:1.
 - **Due merli adiacenti devono avere la stessa altezza.** Se differiscono, al loro spigolo comune nascono due bordi liberi sovrapposti invece di una piega.
 - **La planarità va controllata, non solo la manifold-ness.** Una faccia svergolata non si piega combaciando, e il controllo di manifold-ness non la vede.
+- **I deflettori rispondono a due criteri opposti, entrambi da misurare.** L'insieme non deve lasciare un canale verticale libero (o il dado cade senza toccare), ma ogni striscia da sola deve lasciar passare il dado più grande (o si intasa). Guardare solo la copertura porta a un imbuto. Le pieghe della corrugazione devono correre lungo la luce: trasversali darebbero un soffietto, cioè una molla.
+- **Qualunque partizione interna del tubo rende non-manifold il guscio** (lo spigolo di attacco avrebbe 3 facce). Per questo rampa e deflettori sono oggetti separati, che nel papercraft è anche la norma.
 - **La vaschetta è un settore radiale a livello del suolo.** Radiale perché così i fianchi sono complanari; a livello del suolo perché sospesa i dadi restavano dentro.
 - **Si esporta un OBJ solo con tutti i sotto-assemblaggi, non uno per oggetto.** Pepakura occupa almeno una pagina per documento: `Muro` e `Rampa` riempiono l'8% e il 6% di un A4, quindi con file separati si stampano tre pagine di cui due quasi bianche. Lo spreco di carta è una dimensione di costo da misurare come le altre.
 - **`export/`**: gli `.obj` si versionano, ciò che Pepakura produce (`.pdo`, `.pdf`) è ignorato.

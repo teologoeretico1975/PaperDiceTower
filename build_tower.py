@@ -40,6 +40,58 @@ PLINTH_JAG = [0.08, 0.22, 0.05, 0.18, 0.28, 0.10, 0.15, 0.24, 0.06]
 # delle feritoie, il settore della vaschetta e le liste per-faccia.
 
 
+# Deflettori interni: piastre piane che intercettano il dado in caduta.
+#
+# Senza, il dado fa 263 mm di caduta libera in un tubo largo 63 mm alla scala di
+# riferimento: non tocca nulla e arriva giu' con la faccia con cui e' entrato,
+# quindi la torre non randomizza niente.
+#
+# Sono un oggetto separato ("Deflettori") e non lembi incernierati al guscio:
+# una partizione interna di un tubo rende non-manifold lo spigolo dove si
+# attacca (3 facce su un solo spigolo), e questo vale per qualunque soluzione
+# integrata nella stessa mesh.
+#
+# Perche' piastre piane e non una scala a chiocciola: un elicoide non e' una
+# superficie sviluppabile, cioe' non si appiattisce su un foglio senza stirare
+# la carta, quindi andrebbe approssimato con molte faccette con relative
+# linguette. E funzionalmente il dado ci scivolerebbe sopra in modo continuo,
+# mentre per randomizzare serve che rimbalzi cambiando faccia.
+# Ogni deflettore e' una STRISCIA CORRUGATA che va da parete a parete, non una
+# piastra piana a sbalzo. Due motivi:
+#
+# 1. Rigidezza. Una piastra incollata su un solo lato e protesa 39 mm nel vuoto
+#    flette e finisce per piegarsi sulla linea di colla, perche' la rigidezza a
+#    flessione cresce col cubo dell'altezza della sezione e in un foglio piatto
+#    quell'altezza e' lo spessore della carta. La corrugazione porta l'altezza
+#    utile da 0,25 a ~5 mm, quindi non serve cartoncino. Andando da parete a
+#    parete la striscia e' inoltre appoggiata a entrambi gli estremi.
+# 2. Le creste fanno rimbalzare il dado in modo piu' caotico di una superficie
+#    liscia, che e' lo scopo dell'oggetto.
+#
+# Vincolo che decide se funziona: le pieghe devono correre LUNGO la luce. Piegate
+# in senso trasversale si otterrebbe un soffietto, cioe' una molla, piu' cedevole
+# di un foglio piatto.
+#
+# La larghezza in pianta non puo' superare la corda di una faccia, altrimenti gli
+# estremi della striscia sporgerebbero oltre gli spigoli e bucherebbero la parete.
+# Servono QUATTRO strisce, e il numero viene da due criteri opposti misurati, non
+# da una stima:
+#  - insieme devono coprire tutta la sezione in pianta, altrimenti resta una
+#    traiettoria verticale libera e il dado cade senza toccare nulla (con due
+#    strisce restava un canale di 25 mm, contro i 15 mm del dado piu' piccolo);
+#  - ogni striscia da sola deve invece lasciare un varco piu' largo del dado piu'
+#    GRANDE, altrimenti il dado si incastra al posto di scendere (ne lascia 24 mm,
+#    contro i 20 di un d20).
+# Vedi check_baffle_coverage() e check_baffle_passage().
+BAFFLE = dict(
+    count=4,             # numero di strisce
+    plan_width=0.66,     # larghezza proiettata: <= corda di una faccia (0.694)
+    panels=4,            # numero di falde della corrugazione
+    amplitude=0.10,      # ampiezza cresta-valle (~4,4 mm alla scala di stampa)
+    tilt_deg=10.0,       # inclinazione laterale, per far rotolare via il dado
+)
+
+
 def norm_angle(a):
     """Riporta un angolo in gradi nell'intervallo (-180, 180]."""
     return (a + 180.0) % 360.0 - 180.0
@@ -107,6 +159,90 @@ def slit_specs(sides):
         else:
             specs.append((angle, 0.35, 0.35))
     return specs
+
+
+def slit_bands(sides, opening_top=0.95):
+    """Per ogni faccia, l'intervallo di quote occupato dalla sua feritoia."""
+    face_mid = (opening_top + PLINTH_H + SHAFT_H) / 2.0
+    return {round(a, 2): (face_mid + v - h, face_mid + v + h)
+            for a, v, h in slit_specs(sides)}
+
+
+def baffle_specs(sides, opening_top=0.95, **overrides):
+    """Coppie di facce e quote per le strisce corrugate.
+
+    Vincoli risolti qui:
+    - ogni striscia va da una faccia a quella piu' vicina all'opposto, cosi' e'
+      appoggiata a entrambi gli estremi;
+    - le due strisce devono avere assi il piu' possibile perpendicolari, perche'
+      i varchi laterali di una siano coperti dall'altra;
+    - la quota deve stare fuori dalle bande delle feritoie di **entrambe** le
+      facce a cui la striscia si incolla, altrimenti la linguetta le coprirebbe.
+    """
+    p = dict(BAFFLE)
+    p.update(overrides)
+
+    shaft_hi = PLINTH_H + SHAFT_H
+    bands = slit_bands(sides, opening_top)
+    centers = [round(a, 2) for a in face_center_angles(sides)]
+    r_ins = SHAFT_R * math.cos(math.pi / sides)
+    half_z = 0.5 * p["plan_width"] * math.tan(math.radians(p["tilt_deg"])) \
+        + 0.5 * p["amplitude"] + 0.05
+
+    def point(a):
+        return (r_ins * math.cos(math.radians(a)), r_ins * math.sin(math.radians(a)))
+
+    coppie = []
+    for a in centers:
+        b = min((c for c in centers if c != a),
+                key=lambda c: abs(abs(norm_angle(c - a)) - 180.0))
+        if (b, a) in [(x[0], x[1]) for x in coppie]:
+            continue
+        pa, pb = point(a), point(b)
+        axis = math.degrees(math.atan2(pb[1] - pa[1], pb[0] - pa[0]))
+        # finestre di quota libere da entrambe le feritoie
+        blocked = sorted([bands[a], bands[b]])
+        windows, z = [], opening_top + half_z
+        for lo, hi in blocked:
+            if lo - half_z > z:
+                windows.append((z, lo - half_z))
+            z = max(z, hi + half_z)
+        if shaft_hi - half_z > z:
+            windows.append((z, shaft_hi - half_z))
+        windows = [w for w in windows if w[1] - w[0] > 0.05]
+        if windows:
+            coppie.append((a, b, axis, windows))
+
+    count = int(p.pop("count"))
+    if len(coppie) < count:
+        raise RuntimeError(f"servono {count} coppie di facce ma ne esistono {len(coppie)}")
+
+    # Le coppie si ordinano per direzione dell'asse vista come RETTA (non come
+    # vettore: una striscia non ha un verso), poi si alternano assegnando le quote
+    # a zig-zag sull'ordine angolare, cosi' due strisce vicine in altezza non hanno
+    # anche assi vicini e i loro varchi laterali non si allineano.
+    coppie.sort(key=lambda c: c[2] % 180.0)
+    scelte = [coppie[i] for i in range(count)]
+    ordine = list(range(0, count, 2)) + list(range(1, count, 2))
+    scelte = [scelte[i] for i in ordine]
+
+    # Quote distribuite uniformemente sull'altezza utile del fusto: distanziarle
+    # serve perche' il dado abbia spazio per ribaltarsi tra un urto e il successivo.
+    lo = opening_top + half_z
+    hi = PLINTH_H + SHAFT_H - half_z
+    passo = (hi - lo) / count
+    quote = [hi - passo * (i + 0.5) for i in range(count)]
+
+    out = []
+    for (a, b, axis, _), z in zip(scelte, quote):
+        # Se la quota cade sulla feritoia di una delle due facce, la linguetta ne
+        # copre un tratto dall'interno: effetto cosmetico su una fessura da 4 mm,
+        # segnalato invece di essere evitato a costo di ammassare le strisce.
+        su_feritoia = [f for f in (a, b)
+                       if bands[f][0] - half_z < z < bands[f][1] + half_z]
+        out.append(dict(face_a=a, face_b=b, axis_deg=round(axis, 2),
+                        z=round(z, 3), over_slit=su_feritoia, **p))
+    return out
 
 
 def merlon_pattern(sides):
@@ -517,6 +653,193 @@ def open_top_and_crenellate(obj, marks, heights=None):
     }
 
 
+def add_baffles(sides=None, specs=None):
+    """Crea l'oggetto 'Deflettori': una striscia corrugata per deflettore.
+
+    Ogni falda della corrugazione e' un quadrilatero con due lati paralleli
+    all'asse della striscia, quindi planare per costruzione: nello sviluppo la
+    striscia e' un rettangolo con linee di piega parallele, la forma piu' semplice
+    che Pepakura possa gestire.
+    """
+    sides = SIDES if sides is None else sides
+    specs = baffle_specs(sides) if specs is None else specs
+
+    r_ins = SHAFT_R * math.cos(math.pi / sides)   # apotema: distanza della faccia piatta
+
+    mesh = bpy.data.meshes.new("Deflettori_mesh")
+    verts, faces = [], []
+    for s in specs:
+        aa, ab = math.radians(s["face_a"]), math.radians(s["face_b"])
+        pa = Vector((r_ins * math.cos(aa), r_ins * math.sin(aa), s["z"]))
+        pb = Vector((r_ins * math.cos(ab), r_ins * math.sin(ab), s["z"]))
+        axis = (pb - pa)
+        length = axis.length
+        axis.normalize()
+        # trasversale, inclinata di tilt_deg: percorrendola si scende
+        flat = Vector((-axis.y, axis.x, 0.0)).normalized()
+        phi = math.radians(s["tilt_deg"])
+        across = flat * math.cos(phi) - Vector((0, 0, 1)) * math.sin(phi)
+        normal = axis.cross(across).normalized()
+
+        n_p = int(s["panels"])
+        pitch = s["plan_width"] / n_p
+        centre = pa + axis * (length / 2.0)
+        na = Vector((math.cos(aa), math.sin(aa), 0.0))
+        nb = Vector((math.cos(ab), math.sin(ab), 0.0))
+        base = len(verts)
+        for i in range(n_p + 1):
+            off = -s["plan_width"] / 2.0 + pitch * i
+            # creste e valli alternate: e' questo che da' altezza alla sezione
+            ridge = normal * (s["amplitude"] / 2.0 * (1 if i % 2 == 0 else -1))
+            crease = centre + across * off + ridge
+            # Ogni cresta va tagliata SUI PIANI delle due facce, non a lunghezza
+            # fissa: le facce non sono esattamente opposte, quindi spostandosi in
+            # senso trasversale gli estremi escrescerebbero oltre la parete.
+            ta = (r_ins - crease.dot(na)) / axis.dot(na)
+            tb = (r_ins - crease.dot(nb)) / axis.dot(nb)
+            verts.append(crease + axis * ta)
+            verts.append(crease + axis * tb)
+        for i in range(n_p):
+            k = base + 2 * i
+            faces.append((k, k + 1, k + 3, k + 2))
+
+    mesh.from_pydata(verts, [], faces)
+    mesh.update()
+    obj = bpy.data.objects.new("Deflettori", mesh)
+    bpy.context.collection.objects.link(obj)
+
+    bm = bmesh.new()
+    bm.from_mesh(mesh)
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    bm.normal_update()
+    bm.to_mesh(mesh)
+    mesh.update()
+    bm.free()
+    scale = REFERENCE_HEIGHT_MM / (PLINTH_H + SHAFT_H + sum(h for h, _ in RINGS))
+    p0 = specs[0]
+    pitch = p0["plan_width"] / p0["panels"]
+    return obj, {
+        "count": len(specs),
+        "specs": [{"da_faccia": s["face_a"], "a_faccia": s["face_b"],
+                   "asse_deg": s["axis_deg"], "z": s["z"]} for s in specs],
+        "assi_a_deg": None if len(specs) < 2 else round(
+            abs(norm_angle(specs[1]["axis_deg"] - specs[0]["axis_deg"])), 1),
+        "mm": {
+            "larghezza_in_pianta": round(p0["plan_width"] * scale, 1),
+            "larghezza_sviluppata": round(
+                p0["panels"] * math.hypot(pitch, p0["amplitude"]) * scale, 1),
+            "passo_creste": round(pitch * scale, 1),
+            "ampiezza": round(p0["amplitude"] * scale, 1),
+        },
+    }
+
+
+def check_baffles_fit(baffle_obj, shell_obj, tol=0.01):
+    """Verifica che nessun deflettore sbuchi dalle pareti del guscio.
+
+    I vertici della cerniera stanno *sulla* parete per costruzione, quindi qui non
+    si pretende un margine positivo come per la rampa: si controlla soltanto che
+    nessun vertice stia fuori. Il ray-cast parte dall'asse, quindi va saltato per
+    la punta, che passa oltre l'asse e non ha una direzione radiale sensata.
+    """
+    rows, worst = [], None
+    for v in baffle_obj.data.vertices:
+        co = baffle_obj.matrix_world @ v.co
+        radial = Vector((co.x, co.y, 0.0))
+        if radial.length < 0.05:
+            continue
+        hit, loc, _, _ = shell_obj.ray_cast(
+            Vector((0.0, 0.0, co.z)), radial.normalized())
+        if not hit:
+            continue
+        margin = (loc - Vector((0.0, 0.0, co.z))).length - radial.length
+        rows.append({"co": [round(c, 3) for c in co], "margine": round(margin, 4)})
+        if worst is None or margin < worst:
+            worst = margin
+    return {"verts": rows, "worst_margin": None if worst is None else round(worst, 4),
+            "ok": worst is not None and worst >= -tol}
+
+
+def check_baffle_coverage(baffle_obj, sides=None, target_height_mm=None,
+                          smallest_die_mm=15.0, grid=90):
+    """Misura se un dado puo' cadere dritto senza toccare alcun deflettore.
+
+    Non basta contare la percentuale di sezione coperta: cio' che conta e' il
+    **canale libero piu' largo**, perche' un dado passa solo se trova un varco
+    piu' grande di se'. Qui si spara un raggio verticale da una griglia di punti
+    della sezione del fusto e si cerca il cerchio piu' grande che sta interamente
+    nella zona non coperta (limitato anche dalle pareti).
+
+    `smallest_die_mm` e' il dado piu' piccolo di un set poliedrico (il d8, ~15 mm),
+    non il d20: e' quello il caso peggiore.
+    """
+    sides = SIDES if sides is None else sides
+    if target_height_mm is None:
+        target_height_mm = REFERENCE_HEIGHT_MM
+    scale = target_height_mm / (PLINTH_H + SHAFT_H + sum(h for h, _ in RINGS))
+    r_ins = SHAFT_R * math.cos(math.pi / sides)
+    normals = [(math.cos(math.radians(90 + (k + 0.5) * 360.0 / sides)),
+                math.sin(math.radians(90 + (k + 0.5) * 360.0 / sides)))
+               for k in range(sides)]
+
+    inside = []
+    for i in range(grid):
+        for j in range(grid):
+            x = -SHAFT_R + 2 * SHAFT_R * i / (grid - 1)
+            y = -SHAFT_R + 2 * SHAFT_R * j / (grid - 1)
+            if all(x * nx + y * ny <= r_ins - 1e-9 for nx, ny in normals):
+                inside.append((x, y))
+
+    z_top = PLINTH_H + SHAFT_H
+    free, blocked = [], []
+    for x, y in inside:
+        hit, _, _, _ = baffle_obj.ray_cast(
+            Vector((x, y, z_top)), Vector((0.0, 0.0, -1.0)))
+        (blocked if hit else free).append((x, y))
+
+    r_max = 0.0
+    for x, y in free:
+        d_wall = min(r_ins - (x * nx + y * ny) for nx, ny in normals)
+        d_blk = min((math.hypot(x - bx, y - by) for bx, by in blocked), default=99.0)
+        r_max = max(r_max, min(d_wall, d_blk))
+
+    channel_mm = 2.0 * r_max * scale
+    return {
+        "copertura_pct": round(100.0 * len(blocked) / len(inside)),
+        "canale_libero_mm": round(channel_mm, 1),
+        "dado_piu_piccolo_mm": smallest_die_mm,
+        "ok": channel_mm < smallest_die_mm,
+    }
+
+
+def check_baffle_passage(sides=None, specs=None, target_height_mm=None,
+                         largest_die_mm=20.0, grid=90):
+    """Verifica che il dado riesca a SCENDERE oltre ogni singolo deflettore.
+
+    E' il criterio opposto a check_baffle_coverage: quello pretende che l'insieme
+    delle strisce non lasci un canale verticale libero, questo pretende che
+    ciascuna striscia da sola lasci un varco piu' largo del dado piu' GRANDE,
+    altrimenti il dado si incastra al posto di scendere. Progettare guardando solo
+    la copertura porta a un imbuto che si intasa.
+    """
+    sides = SIDES if sides is None else sides
+    specs = baffle_specs(sides) if specs is None else specs
+    rows, worst = [], None
+    for i, s in enumerate(specs):
+        obj, _ = add_baffles(sides=sides, specs=[s])
+        cov = check_baffle_coverage(obj, sides=sides,
+                                    target_height_mm=target_height_mm,
+                                    smallest_die_mm=largest_die_mm, grid=grid)
+        bpy.data.objects.remove(obj, do_unlink=True)
+        gap = cov["canale_libero_mm"]
+        rows.append({"striscia": i + 1, "z": s["z"], "varco_mm": gap,
+                     "passa": gap >= largest_die_mm})
+        worst = gap if worst is None else min(worst, gap)
+    return {"per_striscia": rows, "varco_minimo_mm": worst,
+            "dado_piu_grande_mm": largest_die_mm,
+            "ok": worst is not None and worst >= largest_die_mm}
+
+
 def add_perimeter_wall(merlons=None, gate=None, sides=None, **overrides):
     """Crea l'oggetto 'Muro': muretto di cinta merlato davanti alla torre.
 
@@ -807,7 +1130,8 @@ def build_tower(sides=None):
     # Va rimosso tutto cio' che lo script rigenera, altrimenti rieseguirlo
     # accumula duplicati (Rampa.001, Rampa.002, ...).
     for name in list(bpy.data.objects.keys()):
-        if name in ("Torre", "Rampa", "Muro") or name.startswith(("Merlone_", "Muro.", "Rampa.")):
+        if name in ("Torre", "Rampa", "Muro", "Deflettori") or \
+                name.startswith(("Merlone_", "Muro.", "Rampa.", "Deflettori.")):
             bpy.data.objects.remove(bpy.data.objects[name], do_unlink=True)
     for m in list(bpy.data.meshes):
         if m.users == 0:
@@ -979,7 +1303,7 @@ def check_ramp_fits(ramp_obj, shell_obj, min_margin=0.04):
 
 
 def export_for_pepakura(target_height_mm=None, out_dir=None,
-                        names=("Torre", "Rampa", "Muro"), combined=True,
+                        names=("Torre", "Rampa", "Muro", "Deflettori"), combined=True,
                         basename="PaperDiceTower"):
     """Esporta gli OBJ per Pepakura, scalati all'altezza di stampa richiesta.
 
@@ -1173,6 +1497,7 @@ def build_all(sides=None):
     crown = open_top_and_crenellate(torre, marks)
     rampa = add_exit_ramp(sides=sides)
     muro, wall_info = add_perimeter_wall(sides=sides)
+    deflettori, baffle_info = add_baffles(sides=sides)
 
     report = check_mesh(torre)
     report["expected_boundary_edges"] = (
@@ -1194,6 +1519,11 @@ def build_all(sides=None):
         "check_muro": wall_report,
         "check_rampa": check_mesh(rampa),
         "fit_rampa": check_ramp_fits(rampa, torre),
+        "deflettori": baffle_info,
+        "check_deflettori": check_mesh(deflettori),
+        "fit_deflettori": check_baffles_fit(deflettori, torre),
+        "copertura_deflettori": check_baffle_coverage(deflettori, sides=sides),
+        "passaggio_deflettori": check_baffle_passage(sides=sides),
     }
 
 

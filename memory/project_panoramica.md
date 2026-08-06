@@ -13,6 +13,8 @@ Torre dadi fantasy low-poly modellata in Blender, da esportare e unfoldare con P
 
 Costo della scelta: 4 pagine A4 invece di 2 (3 impaginando a mano), e area della carta che cresce col quadrato della scala.
 
+**Deflettori interni, aggiunti il 2026-08-06:** quattro strisce corrugate che attraversano il fusto da parete a parete (oggetto `Deflettori`). Servivano perche' senza il dado fa 263 mm di caduta libera in un tubo largo 63 mm e arriva giu' con la faccia con cui e' entrato. Il dimensionamento non si ricava a ragionamento: ci ho provato e ho sbagliato due volte di seguito. Vanno misurati **due criteri opposti** — l'insieme non deve lasciare un canale verticale libero (o il dado cade senza toccare), ogni striscia da sola deve lasciar passare il dado piu' grande (o si intasa). Vedi [[reference-vincoli-papercraft]].
+
 **Il modello si rigenera dallo script, non si modifica a mano.** `build_tower.py` in radice del repo è la fonte di verità: contiene i parametri in cima, le funzioni di costruzione e i controlli di validità. Da dentro Blender: `exec(open(r"E:\repos\PaperDiceTower\build_tower.py").read())`. È idempotente (cancella e ricrea gli oggetti che genera).
 
 **Perché uno script:** modellando a incrementi via MCP, ogni ritocco di proporzioni obbligava a rifare tutto a mano, e il `.blend` è un binario opaco in git. Con lo script le modifiche sono leggibili in diff e un collega può ricostruire il modello dal repo.

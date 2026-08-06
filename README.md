@@ -48,6 +48,7 @@ Il modello a 9 lati è conservato perché il confronto sopra è l'unica traccia 
 | feritoia | 3,9 × 35,0 mm |
 | vaschetta | profonda 45,9 mm, pareti 19,7 mm |
 | rampa | dislivello 21,0 mm, larga 39,4 mm al varco |
+| deflettore | 35,6 mm sviluppati (30,5 in pianta), creste con passo 7,6 e ampiezza 4,6 mm |
 
 Altezza massima stampabile senza dividere pezzi: **~322 mm** (limite dato dalla striscia del corpo principale contro il lato lungo di un A4). Verificabile con `check_page_fit(target_height_mm=...)`.
 
@@ -64,7 +65,7 @@ Perché uno script e non solo il `.blend`: il file Blender è un binario opaco i
 
 ## Struttura del modello
 
-Tre oggetti, cioè tre sotto-assemblaggi distinti: `Torre` (guscio), `Rampa` (cuneo interno), `Muro` (cinta decorativa).
+Quattro oggetti, cioè quattro sotto-assemblaggi distinti: `Torre` (guscio), `Rampa` (cuneo interno), `Muro` (cinta decorativa), `Deflettori` (quattro strisce corrugate interne).
 
 - **Plinto**: base svasata con raggi irregolari, roccia semplificata a facce piatte.
 - **Fusto**: slanciato (rapporto altezza/larghezza ~3,5:1), con 9 **feritoie** verticali passanti ad altezze alternate — alternarle evita di rimuovere carta lungo un unico anello del tubo, che è la parte portante.
@@ -72,8 +73,28 @@ Tre oggetti, cioè tre sotto-assemblaggi distinti: `Torre` (guscio), `Rampa` (cu
 - **Corpo principale**: tamburo più largo del fusto, con 9 **finestre ad arco a punta passanti** (contorno faceted: base rettangolare più arco in 4 segmenti). Sono fori, non tasche: dietro si incolla carta velina colorata come "vetro".
 - **Varco e vaschetta**: apertura che attraversa plinto e base del fusto (il plinto da solo è troppo basso perché passi un dado), con vaschetta a settore radiale saldata a livello del suolo.
 - **Rampa**: cuneo inclinato ~17° che convoglia i dadi verso il varco, altrimenti su un pavimento piatto restano dentro.
+- **Deflettori**: quattro strisce corrugate che attraversano il fusto da parete a parete, a quote e rotazioni diverse. Senza, il dado fa 263 mm di caduta libera in un tubo largo 63 mm: non tocca nulla e arriva giù con la faccia con cui è entrato, quindi la torre non randomizza niente.
 - **Parapetto e merlature**: mensola e fascia cilindrica in cima, con la merlatura ottenuta prolungando i pannelli del parapetto. Cima aperta: è da lì che entrano i dadi.
 - **Muro di cinta**: arco sfaccettato davanti alla torre, merlato, con apertura ad arco decorativa e linguetta di incollaggio alla base.
+
+### I deflettori: due criteri opposti
+
+Il dimensionamento non si può ricavare a ragionamento, e provarci mi ha fatto sbagliare due volte. Servono **due misure che tirano in direzioni contrarie**, entrambe nello script:
+
+- `check_baffle_coverage` — l'**insieme** delle strisce non deve lasciare un canale verticale libero più largo del dado **più piccolo** (il d8, ~15 mm, non il d20: è quello il caso peggiore). Altrimenti il dado cade dritto senza toccare niente.
+- `check_baffle_passage` — **ogni striscia da sola** deve lasciare un varco più largo del dado **più grande** (d20, 20 mm). Altrimenti il dado si incastra invece di scendere.
+
+Valori raggiunti: canale dritto **1,7 mm**, varco minimo per livello **25,3 mm**. Guardare solo la copertura porta a un imbuto che si intasa.
+
+Da qui vengono le quattro strisce: con due il canale libero restava di 25 mm, e aggiungere ampiezza o una terza piastra non bastava.
+
+### Perché corrugate e non piastre piane
+
+Una piastra incollata su un solo lato e protesa nel vuoto flette e si piega sulla linea di colla, perché la rigidezza a flessione cresce col cubo dell'altezza della sezione e in un foglio piatto quell'altezza è lo spessore della carta. La corrugazione la porta da 0,25 a ~4,6 mm, quindi **non serve cartoncino**. Andando da parete a parete la striscia è inoltre appoggiata a entrambi gli estremi.
+
+**Le pieghe devono correre lungo la luce.** Piegate in senso trasversale si ottiene un soffietto, cioè una molla, più cedevole di un foglio piatto. È l'unico modo di sbagliare questo pezzo.
+
+Scartata la scala a chiocciola: un elicoide non è una superficie sviluppabile, quindi in carta andrebbe approssimato con molte faccette e relative linguette; e funzionalmente il dado ci scivolerebbe sopra invece di rimbalzare.
 
 ### Vincolo sulle merlature
 
