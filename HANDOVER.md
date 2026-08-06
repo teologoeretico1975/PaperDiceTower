@@ -65,7 +65,11 @@ Da tenere d'occhio, in ordine di rischio, con il parametro da cambiare se cede:
 | 3 | varco di uscita, provare col d20 più grosso | 29 mm | `opening_top` in `add_dice_tray` |
 | 4 | soglia dell'apertura del muro | 2,3 mm | `WALL_GATE["v_bottom"]` |
 
-Vincolo di montaggio che nasce dalla geometria: **la rampa va incollata dentro prima di chiudere il fusto**, dopo non passa più dalla cima. Carta da almeno 160-200 g/m², altrimenti il fusto si imbarca.
+Vincolo di montaggio che nasce dalla geometria: **la rampa va incollata dentro prima di chiudere il fusto**, dopo non passa più dalla cima.
+
+Carta **170-200 g/m²**: sotto i 160 il fusto flette sotto il peso della parte alta, sopra i 220 le feritoie da 2,8 mm si sfrangiano e i merli non piegano netti. Incidere le pieghe prima di piegare.
+
+Prima di esportare il PDF, **impostare il formato pagina su A4 in Pepakura**: lasciato su A2 il PDF esce in 4 pagine riempite al 21%. Dettagli in `checklist_export_pepakura.md`.
 
 ## 6. Poi: materiali e texture
 

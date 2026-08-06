@@ -102,7 +102,15 @@ Scrive `export/PaperDiceTower.obj` con tutti i sotto-assemblaggi in un file solo
 | Rampa | 3.235 mm² | 6,1% |
 | **totale** | **44.527 mm²** | **85%** |
 
-Con tre file si stampano tre pagine di cui due quasi bianche. Nel file unico Pepakura annida i pezzi sugli stessi fogli tenendoli comunque distinti e numerati: il totale sta in ~1 pagina più le linguette (che aggiungono il 15-25%), quindi 2 pagine ben riempite invece di 3 sprecate.
+Con tre file si stampano tre documenti separati. Nel file unico Pepakura annida i pezzi sugli stessi fogli tenendoli comunque distinti e numerati.
+
+### Impostare il formato carta in Pepakura
+
+**Il numero di pagine dipende dal formato configurato in Pepakura, non dal modello.** Con il formato lasciato su A2 il layout occupa un A2, che esportato in PDF diventa **4 pagine A4** con un riempimento di circa il 21%: Pepakura distribuisce i pezzi sulla tela grande senza alcun motivo per compattarli in unità A4.
+
+Prima di esportare il PDF, quindi: impostare il formato pagina su **A4** e rilanciare la disposizione automatica dei pezzi. L'area totale dei pezzi è 44.527 mm² contro ~52.600 mm² di A4 stampabile, quindi con le linguette servono realisticamente 2 pagine.
+
+Un vincolo di ingombro da conoscere: la catena di triangoli del plinto è una striscia lunga ~215 mm, più della larghezza stampabile di un A4 in verticale (~190 mm). Va ruotata di 90° per rientrare nei 277 mm dell'altra dimensione. Se Pepakura non lo fa da sé, ruotarla a mano.
 
 Per ristampare un solo pezzo: `export_for_pepakura(combined=False)` torna a un file per oggetto.
 
@@ -127,6 +135,8 @@ Cosa fa e perché:
 
 - **Finestre**: dietro va incollato un foglietto di **carta velina colorata** (ambra o blu) come vetro. Un pezzo piatto per finestra. Se prevedi un LED interno, la velina fa l'effetto vetrata illuminata.
 - **Interno scuro**: perché le finestre leggano scure come nella reference, la faccia interna del foglio va stampata scura, altrimenti si vede il retro bianco della carta attraverso i fori.
+- **Grammatura della carta**: **170-200 g/m²**. Sotto i 160 il fusto è un tubo troppo flessibile per reggere il corpo principale e il parapetto, e i dadi che cadono lo ammaccano. Sopra i 220 i pezzi piccoli diventano il problema opposto: le feritoie da 2,8 mm si sfrangiano al taglio, i merli da ~1 cm non piegano netti e le linguette non si appiattiscono. Se vuoi ottimizzare, i pezzi grandi e strutturali (fusto, corpo principale, plinto) stanno bene a 200 e quelli di dettaglio (parapetto con merlature, muro, rampa) a 160 — ma per un prodotto da vendere conviene una grammatura sola.
+- **Incidere le pieghe prima di piegare**, con una stecca o il dorso di una lama. A 200 g/m² una piega non incisa si spacca o si arrotonda, e sul plinto le pieghe sono ravvicinate.
 - **Rampa**: è un sotto-assemblaggio a sé (cuneo chiuso di 5 facce, pendenza ~17°). Va incollata dentro il guscio **prima** di chiudere la torre, con il bordo basso a filo del varco.
 - **Muro di cinta**: la striscia orizzontale lungo il suo bordo inferiore è la linguetta di incollaggio, non un errore dell'unfold. Va piegata verso l'interno e incollata al piano d'appoggio: senza quella il pannello non sta in piedi.
 - **Merlature**: il profilo a zigzag in cima ai pannelli del parapetto e del muro è una linea di **taglio**. La striscia si piega ai soli spigoli verticali della torre.
