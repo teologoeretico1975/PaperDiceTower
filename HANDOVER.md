@@ -14,11 +14,15 @@ Torre dadi fantasy low-poly modellata in Blender, destinata a essere **unfoldata
 
 **Geometria completa e validata. Unfold verificato in Pepakura. Manca la prova di assemblaggio da stampa.**
 
-| oggetto | ruolo | facce | controlli |
+Esistono **due varianti**, entrambe generate dallo stesso script: `PaperDiceTower.blend` a 9 lati e `PaperDiceTower7.blend` a 7 lati, quest'ultima nata per rendere le pieghe meno fitte su carta pesante (pannelli del fusto da 20,2 mm invece di 16,0). Confronto completo nel README.
+
+| oggetto | ruolo | facce (9 lati) | facce (7 lati) |
 |---|---|---|---|
-| `Torre` | guscio | 158 | 0 non-manifold, 0 non planari, 135 bordi = attesi |
-| `Muro` | cinta decorativa | 21 | 0 non-manifold, 0 non planari, 34 bordi = attesi |
-| `Rampa` | cuneo interno | 5 | guscio chiuso, 0 bordi |
+| `Torre` | guscio | 158 | 123 |
+| `Muro` | cinta decorativa | 21 | 16 |
+| `Rampa` | cuneo interno | 5 | 5 |
+
+Su entrambe: 0 non-manifold, 0 facce non planari, bordi pari agli attesi, rampa dentro le pareti.
 
 Verificato in Pepakura: scala 200 mm corretta, orientamento in piedi, nessun pezzo a scheggia, fori trattati come tagli e non come pieghe, nessuna sovrapposizione.
 
@@ -73,7 +77,7 @@ Vincolo di montaggio che nasce dalla geometria: **la rampa va incollata dentro p
 
 Carta **170-200 g/m²**: sotto i 160 il fusto flette sotto il peso della parte alta, sopra i 220 le feritoie da 2,8 mm si sfrangiano e i merli non piegano netti. Incidere le pieghe prima di piegare.
 
-**Attenzione a un vincolo operativo:** con la versione gratuita di Pepakura non si può salvare il `.pdo`. Ogni reimport dell'OBJ azzera impostazioni e impaginazione, che vanno rifatte a mano (~15 minuti). Quindi: **fare tutto in una sessione sola**, conservare il PDF esportato e uno screenshot del layout come riferimento. La ricetta completa dei passaggi da riapplicare è la sezione 6 di `checklist_export_pepakura.md`. Se il progetto va in vendita la licenza si ripaga subito, perché ogni ritocco al modello impone di rifare l'impaginazione da zero.
+**Attenzione a un vincolo operativo:** con la versione gratuita di Pepakura non si può salvare il `.pdo`. Ogni reimport dell'OBJ azzera impostazioni e impaginazione, che vanno rifatte a mano (~15 minuti). Quindi: **fare tutto in una sessione sola**. Per questo in `export/` sono versionati anche i PDF e gli screenshot dei layout: sono l'unico record di quel lavoro, e da lì si ricostruisce la disposizione invece di ripartire da zero. La ricetta dei passaggi è la sezione 6 di `checklist_export_pepakura.md`. Se il progetto va in vendita la licenza si ripaga subito.
 
 ## 6. Poi: materiali e texture
 

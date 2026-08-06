@@ -20,6 +20,21 @@ exec(open(r"E:\repos\PaperDiceTower\build_tower.py").read())
 
 I parametri (proporzioni, finestre, vaschetta, rampa, merlature, muro) sono in cima a [build_tower.py](build_tower.py). Lo script stampa un report di verifica ed è idempotente: cancella e ricrea gli oggetti che genera.
 
+### Le due varianti
+
+Lo script è parametrico nel numero di facce: `build_all(sides=9)` produce la versione originale, `build_all(sides=7)` quella semplificata. Tutto ciò che dipende dal numero di facce — sporgenze del plinto, angoli delle feritoie, settore della vaschetta, altezze dei merli, segmenti del muro — viene ricavato e non scritto a mano.
+
+| | 9 lati | 7 lati |
+|---|---|---|
+| facce (torre + muro + rampa) | 184 | 144 |
+| finestre / feritoie | 9 / 9 | 7 / 7 |
+| triangoli del plinto | 18 | 14 |
+| larghezza pannello del fusto | 16,0 mm | **20,2 mm** |
+| larghezza segmento del muro | 24,3 mm | **29,2 mm** |
+| carta | 44.527 mm² | 43.040 mm² |
+
+La variante a 7 lati nasce dal fatto che piegare carta da 170-200 g/m² su pannelli da 16 mm è faticoso. Il risparmio di carta è marginale (−5%): il guadagno vero sono i pannelli più larghi, cioè meno pieghe e più distanziate.
+
 Per generare gli OBJ da aprire in Pepakura, dopo lo script:
 
 ```python
@@ -50,8 +65,9 @@ Due merli adiacenti devono avere la **stessa altezza**. Se differiscono, al loro
 ## Struttura della cartella
 
 - `build_tower.py` — generatore parametrico del modello (fonte di verità)
-- `PaperDiceTower.blend` — scena Blender
-- `export/` — OBJ per Pepakura, un file per sotto-assemblaggio (rigenerabili)
+- `PaperDiceTower.blend` — scena Blender, variante a **9 lati**
+- `PaperDiceTower7.blend` — variante semplificata a **7 lati** (vedi sotto)
+- `export/` — OBJ per Pepakura più i PDF del pattern e gli screenshot del layout. Tutto versionato: con la versione gratuita di Pepakura il progetto `.pdo` non è salvabile, quindi il PDF e lo screenshot sono l'unico record dell'impaginazione manuale
 - `checklist_export_pepakura.md` — verifiche prima dell'unfold e note di assemblaggio
 - `screenshots/` — catture del viewport per ogni iterazione
 - `memory/` — note di collaborazione per sessioni Claude future (vedi `memory/MEMORY.md`)

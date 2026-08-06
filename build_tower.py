@@ -22,7 +22,108 @@ SIDES = 9
 PLINTH_R = 1.10
 PLINTH_H = 0.45
 # Sporgenze irregolari del plinto: base "rocciosa" semplificata a facce piatte.
+# Con un numero di lati diverso da 9 se ne prendono i primi *sides* valori
+# (vedi plinth_jag): la sequenza e' fissa perche' il modello resti riproducibile.
 PLINTH_JAG = [0.08, 0.22, 0.05, 0.18, 0.28, 0.10, 0.15, 0.24, 0.06]
+
+
+# --- Geometria derivata dal numero di lati ---------------------------------
+#
+# Tutto quello che dipende da quante facce ha la torre si ricava qui, invece di
+# essere scritto a mano: cambiare `sides` altrimenti spaccherebbe gli angoli
+# delle feritoie, il settore della vaschetta e le liste per-faccia.
+
+
+def norm_angle(a):
+    """Riporta un angolo in gradi nell'intervallo (-180, 180]."""
+    return (a + 180.0) % 360.0 - 180.0
+
+
+def face_center_angles(sides):
+    """Angoli dei centri delle facce laterali, in ordine crescente.
+
+    `primitive_cylinder_add` mette i vertici a `90 + k*360/sides`, quindi i
+    centri delle facce cadono a meta' strada. Verificato contro la torre a 9
+    lati: i centri risultano a -170, -130, -90, ... come da formula.
+    """
+    return sorted(norm_angle(90.0 + (k + 0.5) * 360.0 / sides) for k in range(sides))
+
+
+def vertex_angles(sides):
+    """Angoli degli spigoli verticali, in ordine crescente."""
+    return sorted(norm_angle(90.0 + k * 360.0 / sides) for k in range(sides))
+
+
+def plinth_jag(sides):
+    return [PLINTH_JAG[k % len(PLINTH_JAG)] for k in range(sides)]
+
+
+def tray_face_angles(sides, sectors=None):
+    """Facce contigue occupate dal varco e dalla vaschetta.
+
+    Con `sides` dispari esiste sempre una faccia centrata a -90, quindi un
+    settore simmetrico puo' avere solo un numero dispari di facce. Con 7 lati
+    3 facce sarebbero il 43% del perimetro (plinto troppo indebolito) e 1 sola
+    darebbe una vaschetta troppo piccola: si accetta un settore di 2 facce,
+    non centrato esattamente a -90. Sposta il "davanti" del modello di mezza
+    faccia, senza altre conseguenze.
+    """
+    if sectors is None:
+        sectors = max(1, round(sides / 3))
+    centers = face_center_angles(sides)
+    # Si parte dalla faccia piu' vicina a -90 e si centra il settore su di essa;
+    # con un numero pari di facce resta sbilanciato di mezza faccia in avanti.
+    pivot = min(range(sides), key=lambda i: abs(norm_angle(centers[i] + 90.0)))
+    start = pivot - (sectors - 1) // 2
+    angles = [centers[(start + j) % sides] for j in range(sectors)]
+    if angles != sorted(angles):
+        raise NotImplementedError(
+            "il settore della vaschetta attraversa +/-180 gradi: la selezione "
+            "delle facce per angolo a valle assume un intervallo continuo")
+    return angles
+
+
+def half_face_angle(sides):
+    """Mezza apertura angolare di una faccia, in gradi."""
+    return 180.0 / sides
+
+
+def slit_specs(sides):
+    """Feritoie: una per faccia, con quota alternata tra faccia e faccia.
+
+    Alternare le quote evita di rimuovere carta tutta alla stessa altezza, che
+    indebolirebbe il tubo del fusto su un unico anello.
+    """
+    specs = []
+    for k, angle in enumerate(face_center_angles(sides)):
+        if k % 2 == 0:
+            specs.append((angle, -0.55, 0.40))
+        else:
+            specs.append((angle, 0.35, 0.35))
+    return specs
+
+
+def merlon_pattern(sides):
+    """Altezze dei merli, una per faccia del parapetto (0 = vuoto).
+
+    Vincolo: due merli adiacenti devono avere la stessa altezza, altrimenti al
+    loro spigolo comune nascono due bordi liberi sovrapposti invece di una
+    piega. Qui si alternano merlo e vuoto, e con `sides` dispari l'ultimo slot
+    e' forzato a vuoto perche' altrimenti si troverebbe adiacente al primo.
+
+    Per 9 lati si restituisce la sequenza scelta a mano nel modello originale,
+    cosi' quel file resta riproducibile: contiene un merlo doppio e uno spezzato
+    piu' basso, che l'alternanza automatica non produrrebbe.
+    """
+    if sides == len(MERLON_HEIGHTS):
+        return list(MERLON_HEIGHTS)
+    pool = [0.34, 0.30, 0.36, 0.20]
+    pattern = [0.0] * sides
+    slot = 0
+    for k in range(0, sides - 1, 2):
+        pattern[k] = pool[slot % len(pool)]
+        slot += 1
+    return pattern
 
 SHAFT_R = 0.80
 SHAFT_H = 3.2
@@ -106,21 +207,28 @@ SLITS = [
 # minuscole. La linguetta orizzontale alla base (foot_inward) e' la superficie
 # da incollare, senza la quale un pannello a spessore zero non sta in piedi.
 # Il raggio deve stare fuori dalla vaschetta, che a terra arriva a ~2,37.
+# Ampiezza angolare a cui si mira per ogni segmento del muro. Il numero di
+# segmenti si ricava dividendo il settore per questo valore, quindi non va
+# scritto a mano: settore e numero di lati cambiano insieme.
+WALL_SEGMENT_DEG = 20.0
 WALL = dict(
     radius=2.80,
+    # angle_from/angle_to e segments si ricavano dal settore della vaschetta;
+    # questi valori restano solo come ripiego se si passa un settore esplicito.
     angle_from=-150.0,
     angle_to=-30.0,
     segments=7,
     base_height=0.55,
     foot_inward=0.25,
 )
-# Merlatura del muro: vale lo stesso vincolo della torre (merli adiacenti di
-# altezza diversa creerebbero bordi liberi sovrapposti al posto di una piega).
-WALL_MERLONS = [0.20, 0.0, 0.20, 0.0, 0.20, 0.0, 0.20]
+# La merlatura del muro alterna merlo e vuoto e viene generata in base al numero
+# di segmenti: vale lo stesso vincolo della torre (merli adiacenti di altezza
+# diversa creerebbero bordi liberi sovrapposti al posto di una piega).
 # Apertura ad arco: e' decorativa, non un passaggio. Per arrivare a terra
 # servirebbe una soglia di pochi decimi di millimetro, che si strapperebbe.
+# `segment` viene sempre ricalcolato come quello centrale.
 WALL_GATE = dict(
-    segment=3,          # segmento centrale
+    segment=3,
     half_w=0.13,
     v_bottom=-0.20,
     v_spring=0.00,
@@ -307,7 +415,7 @@ def carve_slit(bm, face, half_w, v_center, half_h):
 
 def add_shaft_slits(obj, marks, slits=None, half_w=None, opening_top=0.95):
     """Apre le feritoie sulle facce del fusto, sopra il varco della vaschetta."""
-    slits = list(SLITS if slits is None else slits)
+    slits = list(slit_specs(marks["sides"]) if slits is None else slits)
     half_w = SLIT_HALF_W if half_w is None else half_w
 
     mesh = obj.data
@@ -340,7 +448,7 @@ def open_top_and_crenellate(obj, marks, heights=None):
     prolungamenti verticali dei pannelli del parapetto, complanari con essi:
     nessun pezzo aggiuntivo da assemblare.
     """
-    heights = list(MERLON_HEIGHTS if heights is None else heights)
+    heights = list(merlon_pattern(marks["sides"]) if heights is None else heights)
     mesh = obj.data
     bm = bmesh.new()
     bm.from_mesh(mesh)
@@ -350,7 +458,7 @@ def open_top_and_crenellate(obj, marks, heights=None):
     top_z = max(v.co.z for v in bm.verts)
     cap = next(
         (f for f in bm.faces
-         if len(f.verts) == SIDES and all(abs(v.co.z - top_z) < 1e-6 for v in f.verts)),
+         if len(f.verts) == marks["sides"] and all(abs(v.co.z - top_z) < 1e-6 for v in f.verts)),
         None,
     )
     if cap is None:
@@ -403,7 +511,7 @@ def open_top_and_crenellate(obj, marks, heights=None):
     }
 
 
-def add_perimeter_wall(merlons=None, gate=None, **overrides):
+def add_perimeter_wall(merlons=None, gate=None, sides=None, **overrides):
     """Crea l'oggetto 'Muro': muretto di cinta merlato davanti alla torre.
 
     Pannello ad arco sfaccettato con linguetta di incollaggio alla base,
@@ -413,10 +521,42 @@ def add_perimeter_wall(merlons=None, gate=None, **overrides):
     """
     p = dict(WALL)
     p.update(overrides)
-    merlons = list(WALL_MERLONS if merlons is None else merlons)
-    gate = dict(WALL_GATE) if gate is None else (dict(gate) if gate else None)
+
+    # Il muro copre lo stesso settore della vaschetta: con un numero di lati
+    # diverso da 9 quel settore cambia, quindi gli angoli vanno ricavati e non
+    # letti da WALL. Il numero di segmenti si adegua per mantenere la stessa
+    # risoluzione angolare (~17 gradi per segmento) e resta dispari, cosi' la
+    # merlatura alternata comincia e finisce con un merlo.
+    sides = SIDES if sides is None else sides
+    if "angle_from" not in overrides and "angle_to" not in overrides:
+        sector = tray_face_angles(sides)
+        half = half_face_angle(sides)
+        p["angle_from"] = sector[0] - half
+        p["angle_to"] = sector[-1] + half
+    if "segments" not in overrides:
+        span = abs(p["angle_to"] - p["angle_from"])
+        # ~20 gradi per segmento, forzato dispari perche' la merlatura alternata
+        # cominci e finisca con un merlo. Da' 7 segmenti sul settore di 120 gradi
+        # della torre a 9 lati e 5 su quello di 103 gradi della torre a 7 lati:
+        # segmenti piu' larghi (29 mm invece di 21 alla scala di stampa) sono
+        # meno faticosi da piegare su carta pesante.
+        p["segments"] = max(3, int(round(span / WALL_SEGMENT_DEG)) | 1)
 
     n = p["segments"]
+    if merlons is None:
+        merlons = [0.20 if i % 2 == 0 else 0.0 for i in range(n)]
+    else:
+        merlons = list(merlons)
+    if gate is None:
+        gate = dict(WALL_GATE)
+        gate["segment"] = n // 2          # segmento centrale, qualunque sia n
+    elif gate:
+        gate = dict(gate)
+    else:
+        gate = None
+    if gate is not None and not 0 <= gate["segment"] < n:
+        raise RuntimeError(f"segmento {gate['segment']} fuori dai {n} del muro")
+
     if len(merlons) != n:
         raise RuntimeError(f"{n} segmenti ma {len(merlons)} altezze di merlo")
 
@@ -491,13 +631,15 @@ def add_perimeter_wall(merlons=None, gate=None, **overrides):
     }
 
 
-def add_exit_ramp(face_angles=(-130.0, -90.0, -50.0), **overrides):
+def add_exit_ramp(face_angles=None, sides=None, **overrides):
     """Crea l'oggetto 'Rampa': cuneo chiuso che inclina il pavimento verso l'uscita.
 
     Il piano superiore e' un trapezio i cui 4 vertici sono complanari perche' la
     quota dipende solo da y (z = a*y + b): allargando il fronte senza toccare la
     quota il piano resta planare, quindi il pezzo si piega combaciando.
     """
+    if face_angles is None:
+        face_angles = tray_face_angles(SIDES if sides is None else sides)
     p = dict(RAMP)
     p.update(overrides)
 
@@ -541,7 +683,7 @@ def add_exit_ramp(face_angles=(-130.0, -90.0, -50.0), **overrides):
     return obj
 
 
-def add_dice_tray(obj, marks, face_angles=(-130.0, -90.0, -50.0),
+def add_dice_tray(obj, marks, face_angles=None,
                   depth=1.05, opening_top=0.95, tol=1e-3):
     """Apre il varco di uscita dei dadi e vi salda la vaschetta a livello del suolo.
 
@@ -555,6 +697,8 @@ def add_dice_tray(obj, marks, face_angles=(-130.0, -90.0, -50.0),
     complanari (tutti i loro vertici stanno sullo stesso piano verticale
     radiale) e non facce svergolate.
     """
+    if face_angles is None:
+        face_angles = tray_face_angles(marks["sides"])
     shaft_lo, shaft_hi = marks["shaft_bottom"], marks["shaft_top"]
     wall_h = shaft_lo
 
@@ -584,7 +728,10 @@ def add_dice_tray(obj, marks, face_angles=(-130.0, -90.0, -50.0),
     bm.faces.ensure_lookup_table()
     bm.verts.ensure_lookup_table()
 
-    a_lo, a_hi = min(face_angles) - 20.5, max(face_angles) + 20.5
+    # Mezza faccia piu' un margine: con un numero di lati diverso da 9 le facce
+    # sono piu' larghe e un valore fisso mancherebbe le facce del settore.
+    half = half_face_angle(marks["sides"])
+    a_lo, a_hi = min(face_angles) - (half + 0.5), max(face_angles) + (half + 0.5)
     doomed = []
     for f in bm.faces:
         a = ang_of(f.calc_center_median())
@@ -602,7 +749,7 @@ def add_dice_tray(obj, marks, face_angles=(-130.0, -90.0, -50.0),
         bmesh.ops.delete(bm, geom=wire, context="EDGES")
     bm.verts.ensure_lookup_table()
 
-    rim_angles = [a - 20.0 for a in face_angles] + [face_angles[-1] + 20.0]
+    rim_angles = [a - half for a in face_angles] + [face_angles[-1] + half]
 
     def vert_at(z, angle, radius=None):
         best, best_err = None, 1e9
@@ -643,8 +790,14 @@ def add_dice_tray(obj, marks, face_angles=(-130.0, -90.0, -50.0),
     return {"tray_sectors": len(B) - 1, "opening_top": opening_top, "tray_depth": depth}
 
 
-def build_tower():
-    """Costruisce l'oggetto 'Torre' e restituisce le quote chiave."""
+def build_tower(sides=None):
+    """Costruisce l'oggetto 'Torre' e restituisce le quote chiave.
+
+    `sides` sovrascrive SIDES: tutto cio' che dipende dal numero di facce viene
+    ricavato dai generatori in cima al file, quindi lo stesso script produce sia
+    la torre a 9 lati sia le varianti semplificate.
+    """
+    sides = SIDES if sides is None else sides
     # Va rimosso tutto cio' che lo script rigenera, altrimenti rieseguirlo
     # accumula duplicati (Rampa.001, Rampa.002, ...).
     for name in list(bpy.data.objects.keys()):
@@ -655,7 +808,7 @@ def build_tower():
             bpy.data.meshes.remove(m)
 
     bpy.ops.mesh.primitive_cylinder_add(
-        vertices=SIDES, radius=SHAFT_R, depth=SHAFT_H,
+        vertices=sides, radius=SHAFT_R, depth=SHAFT_H,
         location=(0, 0, SHAFT_H / 2), end_fill_type="NGON",
     )
     obj = bpy.context.active_object
@@ -675,7 +828,7 @@ def build_tower():
     bottom = next(f for f in bm.faces if all(abs(v.co.z - min_z) < 1e-6 for v in f.verts))
     _, _, plinth_cap = extrude_and_move(bm, [bottom], Vector((0, 0, -PLINTH_H)))
     cap_verts = sorted(plinth_cap.verts, key=lambda v: math.atan2(v.co.y, v.co.x))
-    for v, extra in zip(cap_verts, PLINTH_JAG):
+    for v, extra in zip(cap_verts, plinth_jag(sides)):
         ang = math.atan2(v.co.y, v.co.x)
         r = PLINTH_R + extra
         v.co.x, v.co.y = r * math.cos(ang), r * math.sin(ang)
@@ -687,7 +840,7 @@ def build_tower():
     cur_face = next(f for f in bm.faces if all(abs(v.co.z - max_z) < 1e-6 for v in f.verts))
     cur_r = SHAFT_R
     z = max_z
-    marks = {"shaft_bottom": PLINTH_H, "shaft_top": max_z}
+    marks = {"sides": sides, "shaft_bottom": PLINTH_H, "shaft_top": max_z}
     for i, (h, r) in enumerate(RINGS):
         _, _, cap = extrude_and_move(bm, [cur_face], Vector((0, 0, h)))
         ratio = r / cur_r
@@ -820,7 +973,8 @@ def check_ramp_fits(ramp_obj, shell_obj, min_margin=0.04):
 
 
 def export_for_pepakura(target_height_mm=200.0, out_dir=None,
-                        names=("Torre", "Rampa", "Muro"), combined=True):
+                        names=("Torre", "Rampa", "Muro"), combined=True,
+                        basename="PaperDiceTower"):
     """Esporta gli OBJ per Pepakura, scalati all'altezza di stampa richiesta.
 
     Per default scrive un file solo con tutti i sotto-assemblaggi. Con file
@@ -875,8 +1029,9 @@ def export_for_pepakura(target_height_mm=200.0, out_dir=None,
 
     written = {}
     if combined:
-        written["PaperDiceTower"] = write(
-            os.path.join(out_dir, "PaperDiceTower.obj"), objs)
+        # `basename` permette di esportare una variante senza sovrascrivere
+        # l'OBJ della versione principale, che e' versionato nel repo.
+        written[basename] = write(os.path.join(out_dir, f"{basename}.obj"), objs)
     else:
         for o in objs:
             written[o.name] = write(os.path.join(out_dir, f"{o.name}.obj"), [o])
@@ -911,6 +1066,45 @@ def refresh_viewport():
         for area in window.screen.areas:
             area.tag_redraw()
     bpy.context.view_layer.update()
+
+
+def build_all(sides=None):
+    """Costruisce torre, rampa e muro e restituisce tutti i report.
+
+    `sides` sceglie il numero di facce: 9 e' il modello originale, valori piu'
+    bassi lo semplificano (meno pannelli per striscia, meno pieghe, meno
+    finestre e feritoie).
+    """
+    sides = SIDES if sides is None else sides
+    torre, marks = build_tower(sides)
+    n_windows = add_keep_windows(torre, marks)
+    tray = add_dice_tray(torre, marks)
+    slits = add_shaft_slits(torre, marks)
+    crown = open_top_and_crenellate(torre, marks)
+    rampa = add_exit_ramp(sides=sides)
+    muro, wall_info = add_perimeter_wall(sides=sides)
+
+    report = check_mesh(torre)
+    report["expected_boundary_edges"] = (
+        n_windows * 8 + 2 * tray["tray_sectors"] + 4
+        + crown["boundary_edges"] + slits["boundary_edges"]
+    )
+    wall_report = check_mesh(muro)
+    wall_report["expected_boundary_edges"] = wall_info["boundary_edges"]
+
+    return {
+        "sides": sides,
+        "marks": marks,
+        "windows": n_windows,
+        "tray": tray,
+        "slits": slits,
+        "crown": crown,
+        "wall": wall_info,
+        "check_torre": report,
+        "check_muro": wall_report,
+        "check_rampa": check_mesh(rampa),
+        "fit_rampa": check_ramp_fits(rampa, torre),
+    }
 
 
 if __name__ == "__main__":

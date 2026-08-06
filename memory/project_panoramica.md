@@ -7,6 +7,8 @@ metadata:
 
 Torre dadi fantasy low-poly modellata in Blender, da esportare e unfoldare con Pepakura in un prodotto papercraft destinato alla vendita su Etsy. Reference fornite dall'utente: una torre dadi pieghevole in legno tagliato al laser, poi una torre in resina con base rocciosa, finestre ad arco e muro perimetrale.
 
+**Due varianti dallo stesso script:** `PaperDiceTower.blend` a 9 lati e `PaperDiceTower7.blend` a 7 lati (`build_all(sides=7)`). La seconda nasce da un'osservazione dell'utente: il modello sembrava troppo complesso da piegare su carta da 170-200 g/m². Il risparmio di carta è marginale (−5%), il guadagno vero sono i pannelli più larghi — fusto da 20,2 mm invece di 16,0, segmenti del muro da 29,2 invece di 24,3 — cioè pieghe meno fitte. Tutto ciò che dipende dal numero di facce viene ricavato dai generatori in cima allo script, e il modello a 9 lati resta riproducibile identico (verificato: 222 vertici, 398 spigoli, 158 facce).
+
 **Il modello si rigenera dallo script, non si modifica a mano.** `build_tower.py` in radice del repo è la fonte di verità: contiene i parametri in cima, le funzioni di costruzione e i controlli di validità. Da dentro Blender: `exec(open(r"E:\repos\PaperDiceTower\build_tower.py").read())`. È idempotente (cancella e ricrea gli oggetti che genera).
 
 **Perché uno script:** modellando a incrementi via MCP, ogni ritocco di proporzioni obbligava a rifare tutto a mano, e il `.blend` è un binario opaco in git. Con lo script le modifiche sono leggibili in diff e un collega può ricostruire il modello dal repo.

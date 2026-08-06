@@ -13,6 +13,6 @@ L'eccezione `!export/*.obj` in fondo al `.gitignore` risolve, perche' le regole 
 
 **Come applicarla:** dopo aver committato artefatti di export, verificare che siano davvero tracciati con `git ls-files export` invece di fidarsi dell'esito del commit. Se in futuro si aggiungono altri formati (`*.stl`, texture) controllare prima con `git check-ignore -v <file>` se il template li esclude: contiene centinaia di regole pensate per un progetto .NET, non per un progetto 3D.
 
-**Confine deciso per `export/`:** gli `.obj` sono la fonte verso Pepakura e si versionano; gli artefatti prodotti *da* Pepakura (`.pdo` di progetto, `.pdf` del pattern stampabile) restano fuori, perche' si rigenerano aprendo gli `.obj`. Le regole relative sono in fondo al `.gitignore`.
+**Confine deciso per `export/`: si versiona tutto.** Gli `.obj` sono la fonte verso Pepakura. Gli artefatti prodotti *da* Pepakura (`.pdf` del pattern, `.pdo` di progetto, `.png` dello screenshot di layout) erano stati esclusi come "rigenerabili dagli .obj", poi reintegrati: non lo sono davvero, perche' con la versione gratuita di Pepakura il `.pdo` non e' salvabile e rifare l'impaginazione costa ~15 minuti di lavoro manuale. Un artefatto e' disponibile solo se rigenerarlo e' a costo trascurabile; qui non lo era. Vedi [[reference-pepakura-free]].
 
 Vedi [[project-panoramica]].

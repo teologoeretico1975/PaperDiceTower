@@ -151,7 +151,7 @@ Conseguenze pratiche:
 - **Fare tutto il lavoro in una sessione sola.** Chiudere Pepakura equivale a buttare l'impaginazione.
 - **Il PDF esportato è l'unico artefatto che sopravvive.** Va conservato: serve sia per stampare sia come riferimento visivo per ricostruire la disposizione dei pezzi la volta successiva.
 - Conviene anche **tenere uno screenshot del layout finale**: ricostruire a occhio la posizione di ~13 pezzi da un PDF è più lento che copiarla da un'immagine.
-- La regola `export/*.pdo` nel `.gitignore` esiste per completezza, ma finché si usa la versione gratuita quel file non viene nemmeno prodotto.
+- Per questo motivo **PDF e screenshot del layout sono versionati** in `export/`: non sono artefatti usa e getta, sono l'unico record del lavoro di impaginazione.
 - Se il progetto va in vendita, **la licenza si ripaga da sola**: ogni ritocco al modello significa rifare da zero un'impaginazione di ~15 minuti, e ogni variante futura (dimensioni diverse, versioni a tema) la stessa cosa.
 
 ### Ricetta da riapplicare a ogni reimport
