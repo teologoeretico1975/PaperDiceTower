@@ -118,9 +118,20 @@ Le UV si proiettano con `v` preso dalla quota z in coordinate mondo: è questo c
 
 Verificato: Pepakura importa la texture e la mostra sui pezzi 2D. L'export scrive `.obj` + `.mtl` + i PNG nella stessa cartella (`path_mode="COPY"`), così è autosufficiente.
 
-### Costo di stampa
+### Due varianti stampabili
 
-La copertura d'inchiostro è **~45%** su 1.051 cm² di area stampata. Per un modello che l'acquirente stampa a casa è un costo reale: una variante più chiara (arenaria) consumerebbe molto meno e lascerebbe leggere meglio le linee di taglio e piega. È un parametro dello script, non una riscrittura.
+Il costo di stampa è un vincolo reale, non un dettaglio: la muratura copre di inchiostro il **~45%** di 1.051 cm², cioè quasi metà di 4-5 fogli A4. Invece di scegliere fra resa e costo si spedisce il kit in **due vesti**, lasciando la scelta a chi stampa:
+
+| variante | inchiostro | per chi |
+|---|---|---|
+| `muratura` | 45% | vuole il modello finito appena assemblato |
+| `tinte_piatte` | 18% | vuole colorarlo a mano, o spendere meno di inchiostro |
+
+Geometria e UV sono identiche: cambiano solo i materiali, quindi `export_all_variants()` riassegna e riesporta senza ricostruire nulla. I nomi delle immagini differiscono per variante, così i file copiati in `export/` non si sovrascrivono.
+
+Le tinte piatte hanno un vantaggio collaterale: sono abbastanza chiare da lasciare perfettamente leggibili le linee di taglio e piega di Pepakura, che con la muratura di medio grigio ci competono.
+
+La guida per colorare la versione a tinte piatte è in [ISTRUZIONI.md](ISTRUZIONI.md), che è il documento rivolto all'acquirente — pubblico diverso da questo README.
 
 ## Struttura della cartella
 
@@ -131,6 +142,7 @@ La copertura d'inchiostro è **~45%** su 1.051 cm² di area stampata. Per un mod
 - `PaperDiceTower7.blend` — variante semplificata a **7 lati** (vedi sotto)
 - `export/` — OBJ per Pepakura più i PDF del pattern e gli screenshot del layout. Tutto versionato: con la versione gratuita di Pepakura il progetto `.pdo` non è salvabile, quindi il PDF e lo screenshot sono l'unico record dell'impaginazione manuale
 - `checklist_export_pepakura.md` — verifiche prima dell'unfold e note di assemblaggio
+- `ISTRUZIONI.md` — documento per l'**acquirente**: montaggio e guida ai colori
 - `screenshots/` — catture del viewport per ogni iterazione
 - `memory/` — note di collaborazione per sessioni Claude future (vedi `memory/MEMORY.md`)
 

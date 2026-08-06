@@ -1316,18 +1316,32 @@ def check_ramp_fits(ramp_obj, shell_obj, min_margin=0.04):
 # esistente invece di tagliare una faccia a metà.
 TEXTURE = dict(tile_mm=80.0, moss_below=0.96)
 
+# Due varianti stampabili dello stesso modello, generate da make_textures.py.
+# Non e' una gerarchia di qualita' ma una scelta di prodotto lasciata a chi
+# stampa: la muratura copre di inchiostro il ~45% di 1.051 cm2, le tinte piatte
+# il ~18%, e su queste ultime matita e pennarello scrivono bene. La geometria e
+# le UV sono identiche, cambiano solo i materiali.
+TEXTURE_VARIANTS = {
+    "muratura": (("Pietra", "stone.png"), ("Pietra_muschio", "stone_moss.png")),
+    "tinte_piatte": (("Pietra_piatta", "flat_stone.png"),
+                     ("Pietra_piatta_muschio", "flat_moss.png")),
+}
+
 
 def _texture_dir():
     import os
     return os.path.join(os.path.dirname(bpy.data.filepath), "textures")
 
 
-def load_stone_materials():
-    """Carica (o riusa) i due materiali di pietra dalle tile su disco."""
+def load_stone_materials(variant="muratura"):
+    """Carica (o riusa) i due materiali della variante indicata."""
     import os
 
+    if variant not in TEXTURE_VARIANTS:
+        raise RuntimeError(f"variante '{variant}' sconosciuta: "
+                           f"{sorted(TEXTURE_VARIANTS)}")
     made = {}
-    for name, png in (("Pietra", "stone.png"), ("Pietra_muschio", "stone_moss.png")):
+    for name, png in TEXTURE_VARIANTS[variant]:
         path = os.path.join(_texture_dir(), png)
         if not os.path.exists(path):
             raise RuntimeError(
@@ -1355,7 +1369,8 @@ def load_stone_materials():
         nt.links.new(tex.outputs["Color"], bsdf.inputs["Base Color"])
         nt.links.new(bsdf.outputs["BSDF"], out.inputs["Surface"])
         made[name] = mat
-    return made["Pietra"], made["Pietra_muschio"]
+    clean_name, moss_name = (n for n, _ in TEXTURE_VARIANTS[variant])
+    return made[clean_name], made[moss_name]
 
 
 def uv_project(obj, tiles_per_unit):
@@ -1397,7 +1412,8 @@ def uv_project(obj, tiles_per_unit):
     bm.free()
 
 
-def apply_stone_materials(objs, moss_below=None, tile_mm=None, all_mossy=()):
+def apply_stone_materials(objs, moss_below=None, tile_mm=None, all_mossy=(),
+                          variant="muratura"):
     """Assegna UV e materiali di pietra agli oggetti indicati.
 
     Rampa e Deflettori restano volutamente senza texture: sono interni e non si
@@ -1412,8 +1428,8 @@ def apply_stone_materials(objs, moss_below=None, tile_mm=None, all_mossy=()):
     scale = REFERENCE_HEIGHT_MM / (PLINTH_H + SHAFT_H + sum(h for h, _ in RINGS))
     tiles_per_unit = scale / p["tile_mm"]
 
-    clean, moss = load_stone_materials()
-    report = {}
+    clean, moss = load_stone_materials(variant)
+    report = {"variante": variant}
     for obj in objs:
         obj.data.materials.clear()
         obj.data.materials.append(clean)
@@ -1556,6 +1572,28 @@ def flip_visible_floors(obj, z=0.0, tol=1e-3):
     mesh.update()
     bm.free()
     return {"facce_girate": len(target)}
+
+
+def export_all_variants(target_height_mm=None, basename=None, **kwargs):
+    """Esporta un OBJ per ciascuna variante di texture.
+
+    Geometria e UV sono identiche: cambiano solo i materiali, quindi basta
+    riassegnarli ed esportare di nuovo. I nomi delle immagini differiscono tra
+    varianti, cosi' i file copiati in export/ non si sovrascrivono a vicenda.
+    """
+    if basename is None:
+        basename = f"PaperDiceTower{SIDES}_{int(REFERENCE_HEIGHT_MM)}"
+    objs = [bpy.data.objects[n] for n in ("Torre", "Muro", "Rampa", "Deflettori")
+            if n in bpy.data.objects]
+    out = {}
+    for variant in TEXTURE_VARIANTS:
+        apply_stone_materials(objs, all_mossy=("Muro",), variant=variant)
+        suffix = "" if variant == "muratura" else "_" + variant
+        out[variant] = export_for_pepakura(target_height_mm=target_height_mm,
+                                           basename=basename + suffix, **kwargs)
+    # si lascia la scena sulla variante testurizzata, che e' quella di riferimento
+    apply_stone_materials(objs, all_mossy=("Muro",), variant="muratura")
+    return out
 
 
 def check_page_fit(target_height_mm=None, sides=None, page_mm=(200.0, 287.0)):

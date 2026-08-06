@@ -96,7 +96,9 @@ La grafica è volutamente **di base**: il rischio da chiudere per primo era che 
 
 **Pavimenti in vista: risolto.** Il pianale della vaschetta e il pavimento interno sono superfici interne (l'interno della vaschetta è un unico spazio continuo con quello della torre attraverso il varco), quindi la texture finiva sul lato che guarda il tavolo. `flip_visible_floors()` gira le facce orizzontali a quota zero, a costo di zero pezzi, e verificato in Pepakura. **Va eseguita come ultimo passo**: un `recalc_face_normals` successivo la annulla in silenzio. Vedi `checklist_export_pepakura.md`, sezione 3-bis, per il motivo per cui qualche incoerenza di avvolgimento è inevitabile su una superficie aperta.
 
-Una cosa aperta: **copertura d'inchiostro ~45%** su 1.051 cm². Per un modello che l'acquirente stampa a casa è un costo reale, e una variante più chiara lascerebbe anche leggere meglio le linee di Pepakura.
+**Due varianti stampabili**, non una: `muratura` (45% di inchiostro) e `tinte_piatte` (18%, da colorare a mano). Il costo di stampa era un vincolo reale — quasi metà di 4-5 fogli A4 — e invece di scegliere fra resa e costo si lascia la scelta a chi stampa. `export_all_variants()` produce entrambe: geometria e UV sono identiche, cambiano solo i materiali.
+
+C'è quindi un documento in più, `ISTRUZIONI.md`, rivolto all'**acquirente** e non al progetto: montaggio, ordine dei pezzi e guida per colorare la versione a tinte piatte. Va tenuto distinto da README e da questo file, che parlano a chi sviluppa il modello.
 
 ## 7. Trappole di ambiente
 

@@ -1,12 +1,20 @@
-"""Genera le texture di muratura, ripetibili senza cuciture visibili.
+"""Genera le texture del modello, ripetibili senza cuciture visibili.
 
 Eseguire con il Python di sistema (serve PIL), non con quello di Blender:
 
     python make_textures.py
 
-Scrive in textures/:
-  stone.png       muratura in pietra grigia, pulita
-  stone_moss.png  la stessa con muschio nelle fughe
+Scrive in textures/ due serie, che diventano due varianti stampabili del kit:
+
+  stone.png / stone_moss.png            muratura completa
+  flat_stone.png / flat_moss.png        tinte piatte, da colorare a mano
+
+La variante a tinte piatte non e' una riduzione di qualita' ma una scelta di
+prodotto: la muratura completa copre di inchiostro circa il 45% di 1.051 cm2, che
+per chi stampa a casa e' un costo reale, e il medio grigio fa concorrenza alle
+linee di taglio e piega di Pepakura. Le tinte piatte costano una frazione,
+lasciano le linee perfettamente leggibili e accettano bene matita e pennarello.
+La scelta resta all'acquirente.
 
 Perche' ripetibili e non una texture unica: una tile piccola applicata con UV
 scalate resta nitida a qualunque scala di stampa e pesa pochi kB, mentre una
@@ -142,6 +150,28 @@ def build():
     return written, moss_mask
 
 
+# Tinte piatte: chiare di proposito, cosi' l'inchiostro resta basso e la matita
+# ci scrive sopra. Un colore uniforme si ripete per definizione, quindi una tile
+# minuscola basta: il file pesa poche centinaia di byte.
+FLAT_STONE = (214, 211, 203)
+FLAT_MOSS = (196, 205, 182)
+
+
+def build_flat(out_dir):
+    written = {}
+    for name, rgb in (("flat_stone", FLAT_STONE), ("flat_moss", FLAT_MOSS)):
+        path = os.path.join(out_dir, name + ".png")
+        Image.new("RGB", (8, 8), rgb).save(path, optimize=True)
+        written[name] = path
+    return written
+
+
+def ink_coverage(path):
+    """Frazione di inchiostro stimata: 1 meno la luminosita' relativa media."""
+    a = np.asarray(Image.open(path).convert("RGB")).astype(np.float64)
+    return round(float((1 - a.mean(axis=2) / 255).mean()) * 100, 1)
+
+
 def check_tileable(path, tol=14.0):
     """Verifica che i bordi opposti combacino: e' cio' che rende la tile invisibile."""
     a = np.asarray(Image.open(path)).astype(np.float64)
@@ -156,6 +186,10 @@ def check_tileable(path, tol=14.0):
 
 if __name__ == "__main__":
     files, moss = build()
+    out_dir = os.path.dirname(next(iter(files.values())))
+    files.update(build_flat(out_dir))
     for name, path in files.items():
-        print(name, "->", path, check_tileable(path))
-    print("copertura muschio: %.0f%%" % (100 * (moss > 0.3).mean()))
+        seam = check_tileable(path)
+        print(f"{name:12s} inchiostro {ink_coverage(path):5.1f}%  "
+              f"bordi {'ok' if seam['ok'] else 'DISCONTINUI'}  -> {path}")
+    print("copertura muschio nella variante testurizzata: %.0f%%" % (100 * (moss > 0.3).mean()))
