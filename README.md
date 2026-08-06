@@ -100,9 +100,33 @@ Scartata la scala a chiocciola: un elicoide non è una superficie sviluppabile, 
 
 Due merli adiacenti devono avere la **stessa altezza**. Se differiscono, al loro spigolo comune nascono due bordi liberi sovrapposti invece di una piega: due lembi di carta scollegati nello stesso punto. Con altezze uguali i vertici si condividono e i merli si fondono in uno più largo.
 
+## Texture
+
+Due tile di muratura **ripetibili**, generate da [make_textures.py](make_textures.py) con il Python di sistema (serve PIL):
+
+```bash
+python make_textures.py
+```
+
+Ripetibili e non una texture unica perché una tile piccola applicata con UV scalate resta nitida a qualunque scala di stampa e pesa pochi kB, mentre una texture unica per stampare 30 cm a 300 DPI vorrebbe 4096×4096. Lo script verifica da sé la continuità ai bordi: il salto di colore tra bordo destro e sinistro è 0,03 contro un salto medio interno di 1,0, quindi la cucitura è invisibile.
+
+Il limite di una tile ripetibile è che **non ha un "basso"**: non può avere più muschio in fondo. La variazione posizionale si ottiene con due varianti assegnate a fasce di altezza — `stone_moss.png` sotto quota 0,96 (~42 mm dal suolo) e su tutto il muro, `stone.png` sopra. Lo stacco cade su uno spigolo orizzontale già esistente, così non taglia una faccia a metà.
+
+Le UV si proiettano con `v` preso dalla quota z in coordinate mondo: è questo che tiene i corsi di muratura allineati tra facce e tra anelli diversi, invece di farli ripartire da zero su ogni pannello.
+
+**Anche rampa e deflettori sono texturizzati**, benché interni: la rampa è in piena vista attraverso il varco ed è la superficie su cui i dadi atterrano, e il deflettore più alto si vede dall'apertura in cima, cioè proprio quando si guarda dentro per lanciare.
+
+Verificato: Pepakura importa la texture e la mostra sui pezzi 2D. L'export scrive `.obj` + `.mtl` + i PNG nella stessa cartella (`path_mode="COPY"`), così è autosufficiente.
+
+### Costo di stampa
+
+La copertura d'inchiostro è **~45%** su 1.051 cm² di area stampata. Per un modello che l'acquirente stampa a casa è un costo reale: una variante più chiara (arenaria) consumerebbe molto meno e lascerebbe leggere meglio le linee di taglio e piega. È un parametro dello script, non una riscrittura.
+
 ## Struttura della cartella
 
 - `build_tower.py` — generatore parametrico del modello (fonte di verità)
+- `make_textures.py` — generatore delle tile di muratura (Python di sistema, serve PIL)
+- `textures/` — le due tile ripetibili, rigenerabili
 - `PaperDiceTower.blend` — scena Blender, variante a **9 lati**
 - `PaperDiceTower7.blend` — variante semplificata a **7 lati** (vedi sotto)
 - `export/` — OBJ per Pepakura più i PDF del pattern e gli screenshot del layout. Tutto versionato: con la versione gratuita di Pepakura il progetto `.pdo` non è salvabile, quindi il PDF e lo screenshot sono l'unico record dell'impaginazione manuale
@@ -133,4 +157,4 @@ Punti dove è più probabile dover tornare sui parametri, in ordine di rischio:
 3. **Varco di uscita alto 29 mm** contro un d20 da ~20 mm — sulla carta passa, ma va provato col set di dadi vero (`opening_top` in `add_dice_tray`).
 4. **Soglia dell'apertura del muro**, ~2,3 mm (`WALL_GATE["v_bottom"]`) — se si strappa, alzare il bordo inferiore.
 
-Da fare dopo l'unfold: materiali e texture, che sono ciò che separa il modello attuale (grigio da viewport) dall'aspetto della reference.
+Materiali e texture sono fatti (vedi sopra) e verificati passare in Pepakura. La grafica è volutamente di base: serviva prima chiudere il rischio che la versione gratuita di Pepakura scartasse la texture. Ora che è verificato, si può investire — l'occlusione ambientale cotta nella texture è il passo che darebbe più profondità.

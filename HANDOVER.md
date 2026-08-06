@@ -88,11 +88,16 @@ Carta **200 g/m²**, e alla scala di riferimento si può salire fino a ~250: il 
 
 **Attenzione a un vincolo operativo:** con la versione gratuita di Pepakura non si può salvare il `.pdo`. Ogni reimport dell'OBJ azzera impostazioni e impaginazione, che vanno rifatte a mano (~15 minuti). Quindi: **fare tutto in una sessione sola**. Per questo in `export/` sono versionati anche i PDF e gli screenshot dei layout: sono l'unico record di quel lavoro, e da lì si ricostruisce la disposizione invece di ripartire da zero. La ricetta dei passaggi è la sezione 6 di `checklist_export_pepakura.md`. Se il progetto va in vendita la licenza si ripaga subito.
 
-## 6. Poi: materiali e texture
+## 6. Materiali e texture
 
-Non ancora iniziati, ed è ciò che separa il modello attuale (grigio da viewport) dall'aspetto della reference. Il committente ha giudicato la forma senza colore, che è stato uno svantaggio in tutte le revisioni.
+**Fatti, e verificato che Pepakura li importi e li mostri sui pezzi 2D.** Due tile di muratura ripetibili generate da `make_textures.py`, applicate con UV che tengono i corsi allineati su tutta la torre. Dettagli nel README.
 
-Un problema già identificato e da risolvere lì: il pianale della vaschetta è **superficie interna** (l'interno della vaschetta è un unico spazio continuo con l'interno della torre, attraverso il varco), quindi con una skin la texture finirebbe sul lato che guarda il tavolo. Tre soluzioni con costi e controindicazioni: `checklist_export_pepakura.md`, sezione 3-bis.
+La grafica è volutamente **di base**: il rischio da chiudere per primo era che la versione gratuita di Pepakura scartasse la texture, e non valeva la pena investire prima di saperlo. Ora che passa, il passo che darebbe più profondità è cuocere l'occlusione ambientale nella texture (i rientri delle finestre e gli angoli più scuri).
+
+Due cose aperte:
+
+- **Copertura d'inchiostro ~45%** su 1.051 cm². Per un modello che l'acquirente stampa a casa è un costo reale: una variante più chiara consumerebbe meno e lascerebbe leggere meglio le linee di Pepakura.
+- **Il pianale della vaschetta è superficie interna** (l'interno della vaschetta è un unico spazio continuo con quello della torre attraverso il varco), quindi la texture finisce sul lato che guarda il tavolo e il lato in vista resta bianco. Tre soluzioni con costi e controindicazioni: `checklist_export_pepakura.md`, sezione 3-bis. **Da verificare sul PDF texturizzato**, che è la prima occasione in cui il problema si vede davvero.
 
 ## 7. Trappole di ambiente
 

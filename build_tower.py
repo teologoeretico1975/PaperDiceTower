@@ -1302,6 +1302,136 @@ def check_ramp_fits(ramp_obj, shell_obj, min_margin=0.04):
     }
 
 
+# Texture: due tile ripetibili generate da make_textures.py. Vedi quel file per il
+# perche' ripetibili invece di una texture unica.
+#
+# `tile_mm` e' il lato della tile misurato sul modello STAMPATO, non sul modello in
+# unita' di lavoro: la tile ha 8 corsi, quindi 80 mm danno corsi da 10 mm e blocchi
+# da 16-27 mm su una torre di 300 mm.
+#
+# `moss_below` e' la quota sotto la quale si usa la variante col muschio. Serve
+# perche' una tile ripetibile non ha un "basso": la variazione posizionale si
+# ottiene solo assegnando tile diverse a fasce diverse. Il valore coincide con lo
+# spigolo orizzontale a 0.95 creato dal varco, cosi' lo stacco cade su una piega
+# esistente invece di tagliare una faccia a metà.
+TEXTURE = dict(tile_mm=80.0, moss_below=0.96)
+
+
+def _texture_dir():
+    import os
+    return os.path.join(os.path.dirname(bpy.data.filepath), "textures")
+
+
+def load_stone_materials():
+    """Carica (o riusa) i due materiali di pietra dalle tile su disco."""
+    import os
+
+    made = {}
+    for name, png in (("Pietra", "stone.png"), ("Pietra_muschio", "stone_moss.png")):
+        path = os.path.join(_texture_dir(), png)
+        if not os.path.exists(path):
+            raise RuntimeError(
+                f"manca {path}: eseguire 'python make_textures.py' col Python di "
+                "sistema, non con quello di Blender (serve PIL)")
+        mat = bpy.data.materials.get(name)
+        if mat is None:
+            mat = bpy.data.materials.new(name)
+        mat.use_nodes = True
+        nt = mat.node_tree
+        for n in list(nt.nodes):
+            nt.nodes.remove(n)
+        out = nt.nodes.new("ShaderNodeOutputMaterial")
+        bsdf = nt.nodes.new("ShaderNodeBsdfPrincipled")
+        tex = nt.nodes.new("ShaderNodeTexImage")
+        img = bpy.data.images.get(png)
+        if img is None or img.filepath != path:
+            img = bpy.data.images.load(path, check_existing=True)
+        tex.image = img
+        tex.extension = "REPEAT"          # la tile si ripete fuori da 0..1
+        tex.location = (-400, 0)
+        bsdf.location = (-100, 0)
+        out.location = (150, 0)
+        bsdf.inputs["Roughness"].default_value = 0.85
+        nt.links.new(tex.outputs["Color"], bsdf.inputs["Base Color"])
+        nt.links.new(bsdf.outputs["BSDF"], out.inputs["Surface"])
+        made[name] = mat
+    return made["Pietra"], made["Pietra_muschio"]
+
+
+def uv_project(obj, tiles_per_unit):
+    """Proietta le UV in modo che i corsi restino orizzontali su tutta la torre.
+
+    `v` viene dalla quota z in coordinate mondo: cosi' i corsi di muratura si
+    allineano tra facce e tra anelli diversi, invece di ripartire da zero su ogni
+    pannello. `u` viene dall'ascissa curvilinea del centro faccia piu' lo
+    scostamento orizzontale locale, cosi' la larghezza dei blocchi resta costante
+    qualunque sia il raggio dell'anello.
+
+    Le facce orizzontali (pianale della vaschetta, fondo del plinto) non hanno una
+    direzione orizzontale locale sensata: si proiettano dall'alto.
+    """
+    mesh = obj.data
+    bm = bmesh.new()
+    bm.from_mesh(mesh)
+    uv = bm.loops.layers.uv.verify()
+    s = tiles_per_unit
+    for f in bm.faces:
+        n = f.normal
+        if abs(n.z) > 0.7:
+            for loop in f.loops:
+                co = loop.vert.co
+                loop[uv].uv = (co.x * s, co.y * s)
+            continue
+        c = f.calc_center_median()
+        radius = math.hypot(c.x, c.y)
+        u0 = math.atan2(c.y, c.x) * radius
+        right = n.cross(Vector((0, 0, 1)))
+        if right.length < 1e-9:
+            continue
+        right.normalize()
+        for loop in f.loops:
+            d = loop.vert.co - c
+            loop[uv].uv = ((u0 + d.dot(right)) * s, loop.vert.co.z * s)
+    bm.to_mesh(mesh)
+    mesh.update()
+    bm.free()
+
+
+def apply_stone_materials(objs, moss_below=None, tile_mm=None, all_mossy=()):
+    """Assegna UV e materiali di pietra agli oggetti indicati.
+
+    Rampa e Deflettori restano volutamente senza texture: sono interni e non si
+    vedono mai, quindi texturizzarli spreca inchiostro e area di stampa.
+    """
+    p = dict(TEXTURE)
+    if moss_below is not None:
+        p["moss_below"] = moss_below
+    if tile_mm is not None:
+        p["tile_mm"] = tile_mm
+
+    scale = REFERENCE_HEIGHT_MM / (PLINTH_H + SHAFT_H + sum(h for h, _ in RINGS))
+    tiles_per_unit = scale / p["tile_mm"]
+
+    clean, moss = load_stone_materials()
+    report = {}
+    for obj in objs:
+        obj.data.materials.clear()
+        obj.data.materials.append(clean)
+        obj.data.materials.append(moss)
+        uv_project(obj, tiles_per_unit)
+        n_moss = 0
+        for poly in obj.data.polygons:
+            zs = [obj.data.vertices[i].co.z for i in poly.vertices]
+            mossy = obj.name in all_mossy or max(zs) <= p["moss_below"]
+            poly.material_index = 1 if mossy else 0
+            n_moss += int(mossy)
+        obj.data.update()
+        report[obj.name] = {"facce": len(obj.data.polygons), "con_muschio": n_moss}
+    report["tile_mm"] = p["tile_mm"]
+    report["tiles_per_unit"] = round(tiles_per_unit, 4)
+    return report
+
+
 def export_for_pepakura(target_height_mm=None, out_dir=None,
                         names=("Torre", "Rampa", "Muro", "Deflettori"), combined=True,
                         basename="PaperDiceTower"):
@@ -1354,8 +1484,12 @@ def export_for_pepakura(target_height_mm=None, out_dir=None,
             apply_transform=True,
             export_triangulated_mesh=False,
             export_normals=True,
-            export_uv=False,
-            export_materials=False,
+            # UV e materiali servono perche' Pepakura stampi la texture: scrive
+            # anche il .mtl. path_mode="COPY" mette il PNG accanto all'OBJ, cosi'
+            # la cartella e' autosufficiente e Pepakura trova l'immagine.
+            export_uv=True,
+            export_materials=True,
+            path_mode="COPY",
         )
         return path
 
@@ -1507,9 +1641,18 @@ def build_all(sides=None):
     wall_report = check_mesh(muro)
     wall_report["expected_boundary_edges"] = wall_info["boundary_edges"]
 
+    # Il muro sta tutto a livello del suolo, quindi va interamente mossato.
+    # La rampa va texturizzata benche' sia interna: e' in piena vista attraverso il
+    # varco ed e' la superficie su cui i dadi atterrano. Anche i deflettori, perche'
+    # il piu' alto si vede dall'apertura sommitale, cioe' proprio quando si guarda
+    # dentro per lanciare.
+    materiali = apply_stone_materials([torre, muro, rampa, deflettori],
+                                      all_mossy=("Muro",))
+
     return {
         "sides": sides,
         "marks": marks,
+        "materiali": materiali,
         "windows": n_windows,
         "tray": tray,
         "slits": slits,
