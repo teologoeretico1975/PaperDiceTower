@@ -93,7 +93,7 @@ export_for_pepakura(target_height_mm=200)
 
 Scrive `export/PaperDiceTower.obj` con tutti i sotto-assemblaggi in un file solo.
 
-**Un file solo, non tre.** Pepakura crea un documento per file, e ogni documento occupa almeno una pagina. Misurando le aree a 200 mm di altezza:
+**Un file solo, non tre.** Pepakura apre un documento per file, e ogni documento parte da una pagina propria: con file separati i pezzi piccoli non possono condividere il foglio con quelli grandi. Misurando le aree a 200 mm di altezza:
 
 | pezzo | area | % di un A4 |
 |---|---|---|
@@ -104,13 +104,32 @@ Scrive `export/PaperDiceTower.obj` con tutti i sotto-assemblaggi in un file solo
 
 Con tre file si stampano tre documenti separati. Nel file unico Pepakura annida i pezzi sugli stessi fogli tenendoli comunque distinti e numerati.
 
-### Impostare il formato carta in Pepakura
+### Compattare il layout su meno pagine
 
-**Il numero di pagine dipende dal formato configurato in Pepakura, non dal modello.** Con il formato lasciato su A2 il layout occupa un A2, che esportato in PDF diventa **4 pagine A4** con un riempimento di circa il 21%: Pepakura distribuisce i pezzi sulla tela grande senza alcun motivo per compattarli in unità A4.
+**Il formato carta non è la leva: l'A4 è già l'impostazione di default.** Il foglio grande che si vede in Edit Mode non è un A2, è la tela di Pepakura suddivisa in pagine A4 affiancate (2×2). Se il PDF esce in 4 pagine è perché **i pezzi sono sparpagliati**, non per il formato.
 
-Prima di esportare il PDF, quindi: impostare il formato pagina su **A4** e rilanciare la disposizione automatica dei pezzi. L'area totale dei pezzi è 44.527 mm² contro ~52.600 mm² di A4 stampabile, quindi con le linguette servono realisticamente 2 pagine.
+Percorsi verificati in Pepakura Designer 6:
 
-Un vincolo di ingombro da conoscere: la catena di triangoli del plinto è una striscia lunga ~215 mm, più della larghezza stampabile di un A4 in verticale (~190 mm). Va ruotata di 90° per rientrare nei 277 mm dell'altra dimensione. Se Pepakura non lo fa da sé, ruotarla a mano.
+1. `Settings` → **`Page...`** — qui c'è *Paper Size* (già A4, 210×297) e i **margini, 15 mm per lato di default**. Abbassarli a ~5 mm porta l'area utile da 180×267 = 48.060 mm² a 200×287 = 57.400 mm², cioè +19%.
+   Da non confondere con `Settings` → `Print...` (e `File` → `Print Settings...`), che riguardano solo spessore del tratto e stampa vettoriale/bitmap.
+2. `2D Layout` → **`Re-layout Parts...`** — ridispone i pezzi compattandoli. È il comando che risolve le 4 pagine: cambiando margini o formato i pezzi non si spostano da soli.
+3. `2D Layout` → **`Check Overlapping Parts`** — da lanciare dopo il ricalcolo: un pezzo sovrapposto a un altro in stampa è irrecuperabile.
+
+Se `Save` è disattivato e in fondo al menu `File` compare `Switch to Designer Mode`, cliccarlo prima: in modalità ridotta i comandi di layout non sono disponibili.
+
+**Risultato ottenuto: 2 pagine A4**, con i margini a 5 mm e la disposizione rifinita a mano. `Re-layout Parts` da solo si fermava a 4: il suo algoritmo evita che i pezzi escano dai bordi ma non minimizza il numero di pagine, e le strisce lunghe e sottili di questo modello sono il caso peggiore per un impacchettamento automatico. La rifinitura a mano è normale per un kit commerciale, e permette anche di raggruppare i pezzi in modo sensato: corpo della torre su una pagina, base e accessori sull'altra.
+
+Due pagine è anche il minimo teorico: l'area dei pezzi è 44.527 mm² contro 48.060 mm² di A4 stampabile, cioè il 92,6% di una pagina, più il 15-25% di linguette, e un pezzo non può essere spezzato a cavallo di due fogli.
+
+### Opzioni di visualizzazione che contano
+
+Nel pannello *Display Options* di Edit Mode:
+
+- **`Check Overlapping Parts`**: è un'opzione di visualizzazione, non un comando da lanciare. Tenerla attiva **mentre** si dispongono i pezzi: evidenzia le sovrapposizioni in tempo reale. Un pezzo annidato nel foro di un altro (es. la striscia merlata dentro l'anello) non è un errore ma buon impacchettamento, e questa opzione permette di distinguere i due casi.
+- **`Hide nearly flat folding lines`** con soglia 175°: da tenere attiva. Questo modello ha facce complanari (i pannelli dei merli continuano il parapetto sottostante), e le pieghe a 180° non vanno disegnate perché lì la carta resta piatta.
+- **`Edge ID`** e **`Page Number`**: irrilevanti per un prototipo costruito da chi ha fatto il modello, **necessari per la versione da vendere**. `Edge ID` numera gli spigoli accoppiati: senza, con ~13 pezzi e molte linguette, l'acquirente deve indovinare quale linguetta va con quale bordo.
+
+Un vincolo di ingombro da conoscere: la catena di triangoli del plinto è una striscia lunga ~215 mm, più della larghezza stampabile di un A4 in verticale. Va ruotata di 90° per rientrare nell'altra dimensione. Se `Re-layout Parts` non lo fa da sé, ruotarla a mano.
 
 Per ristampare un solo pezzo: `export_for_pepakura(combined=False)` torna a un file per oggetto.
 

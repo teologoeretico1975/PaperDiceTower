@@ -20,7 +20,9 @@ Torre dadi fantasy low-poly modellata in Blender, destinata a essere **unfoldata
 | `Muro` | cinta decorativa | 21 | 0 non-manifold, 0 non planari, 34 bordi = attesi |
 | `Rampa` | cuneo interno | 5 | guscio chiuso, 0 bordi |
 
-Verificato in Pepakura: scala 200 mm corretta, orientamento in piedi, pattern su **1 pagina A4**, nessun pezzo a scheggia, fori trattati come tagli e non come pieghe.
+Verificato in Pepakura: scala 200 mm corretta, orientamento in piedi, nessun pezzo a scheggia, fori trattati come tagli e non come pieghe, nessuna sovrapposizione.
+
+Pattern impaginato su **2 pagine A4**, PDF **vettoriale** (707 segmenti, 27 KB). Le 24 immagini raster che restano nel PDF sono le tessere di sfondo bianco del livello texture, vuoto: innocue.
 
 ## 3. Come si lavora
 
@@ -69,7 +71,7 @@ Vincolo di montaggio che nasce dalla geometria: **la rampa va incollata dentro p
 
 Carta **170-200 g/m²**: sotto i 160 il fusto flette sotto il peso della parte alta, sopra i 220 le feritoie da 2,8 mm si sfrangiano e i merli non piegano netti. Incidere le pieghe prima di piegare.
 
-Prima di esportare il PDF, **impostare il formato pagina su A4 in Pepakura**: lasciato su A2 il PDF esce in 4 pagine riempite al 21%. Dettagli in `checklist_export_pepakura.md`.
+Il `.pdo` con l'impaginazione già rifinita **non è nel repo** (gli artefatti Pepakura sono ignorati): se serve rifarla, i passaggi sono in `checklist_export_pepakura.md`. In sintesi: margini a 5 mm in `Settings` → `Page...`, `2D Layout` → `Re-layout Parts...`, poi sistemare a mano — l'automatico si ferma a 4 pagine. Per la versione da vendere, attivare `Edge ID`.
 
 ## 6. Poi: materiali e texture
 
