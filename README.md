@@ -108,7 +108,20 @@ Due tile di muratura **ripetibili**, generate da [make_textures.py](make_texture
 python make_textures.py
 ```
 
-Ripetibili e non una texture unica perché una tile piccola applicata con UV scalate resta nitida a qualunque scala di stampa e pesa pochi kB, mentre una texture unica per stampare 30 cm a 300 DPI vorrebbe 4096×4096. Lo script verifica da sé la continuità ai bordi: il salto di colore tra bordo destro e sinistro è 0,03 contro un salto medio interno di 1,0, quindi la cucitura è invisibile.
+Ripetibili e non una texture unica perché una tile piccola applicata con UV scalate resta nitida a qualunque scala di stampa e pesa pochi kB, mentre una texture unica per stampare 30 cm a 300 DPI vorrebbe 4096×4096. Lo script verifica da sé la continuità ai bordi confrontando il salto di colore fra bordi opposti con il salto medio interno.
+
+### La muratura viene da una fotoscansione
+
+Se in `textures/src/` c'è una mappa **diffuse** ripetibile, la muratura è derivata da quella; altrimenti lo script ricade su una muratura procedurale. La sorgente non è versionata (pesa MB e a chi usa il kit non serve): versionate sono le tile derivate, che sono il deliverable.
+
+**Verificare la licenza della sorgente prima di vendere il kit.** I pack CC0 (Poly Haven) sono utilizzabili commercialmente, altri no, e dal nome del file non si distingue.
+
+Due rimappature sono obbligatorie, e sono la parte non ovvia:
+
+1. **Schiarire.** Una texture per il 3D è pensata per essere *illuminata*: quella usata ha luminanza media 63/255 e massimo 170, cioè non contiene nemmeno un bianco. Su carta il valore stampato è quello finale, quindi così com'è coprirebbe il **75%** di inchiostro. Portata a media 185 scende al **28%**, e conserva più contrasto fra blocchi e fughe (88) della procedurale che sostituisce (78).
+2. **Ridurre la crominanza.** Applicare la gamma canale per canale amplifica la dominante calda della fotografia: la pietra grigia diventava arenaria dorata. Si rimappa la sola luminanza e la crominanza si comprime al 30%.
+
+Il muschio si posiziona dove l'acqua si ferma, combinando le zone in ombra dell'immagine (fughe e cavità) con un rumore ripetibile. Due parametri sono definiti per ciò che si vede e non per valori arbitrari: `coverage_pct` è la frazione di muschio **visibile** (soglia ricavata per percentile, perché un valore assoluto scelto a occhio aveva prodotto l'1% invece del 12%), e `gain` la nettezza del bordo della chiazza — con un valore basso la frangia morbida tingeva di verde il 72% della tile e la pietra risultava verde invece che grigia con chiazze.
 
 Il limite di una tile ripetibile è che **non ha un "basso"**: non può avere più muschio in fondo. La variazione posizionale si ottiene con due varianti assegnate a fasce di altezza — `stone_moss.png` sotto quota 0,96 (~42 mm dal suolo) e su tutto il muro, `stone.png` sopra. Lo stacco cade su uno spigolo orizzontale già esistente, così non taglia una faccia a metà.
 
@@ -120,11 +133,11 @@ Verificato: Pepakura importa la texture e la mostra sui pezzi 2D. L'export scriv
 
 ### Due varianti stampabili
 
-Il costo di stampa è un vincolo reale, non un dettaglio: la muratura copre di inchiostro il **~45%** di 1.051 cm², cioè quasi metà di 4-5 fogli A4. Invece di scegliere fra resa e costo si spedisce il kit in **due vesti**, lasciando la scelta a chi stampa:
+Il costo di stampa è un vincolo reale, non un dettaglio: si stampano 1.051 cm² su 4-5 fogli A4. Invece di scegliere fra resa e costo si spedisce il kit in **due vesti**, lasciando la scelta a chi stampa:
 
 | variante | inchiostro | per chi |
 |---|---|---|
-| `muratura` | 45% | vuole il modello finito appena assemblato |
+| `muratura` | 28% | vuole il modello finito appena assemblato |
 | `tinte_piatte` | 18% | vuole colorarlo a mano, o spendere meno di inchiostro |
 
 Geometria e UV sono identiche: cambiano solo i materiali, quindi `export_all_variants()` riassegna e riesporta senza ricostruire nulla. I nomi delle immagini differiscono per variante, così i file copiati in `export/` non si sovrascrivono.

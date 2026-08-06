@@ -445,6 +445,11 @@ FodyWeavers.xsd
 # superficie 3D, mentre un foglio stampato non ha rilievo. Si versionano quindi
 # solo le tile derivate in textures/*.png, non gli archivi di partenza.
 textures/*.zip
+# Sorgenti delle texture (mappe diffuse da fotoscansione): MB per file, e a chi usa
+# il kit non servono. Restano versionate le tile derivate in textures/*.png, che
+# sono il deliverable, e make_textures.py rigenera da qui se la sorgente c'e'
+# oppure ricade sulla muratura procedurale se manca.
+textures/src/
 
 # Anche gli artefatti Pepakura in export/ sono versionati (.pdf del pattern,
 # .pdo di progetto, .png del layout). All'inizio erano esclusi come "rigenerabili

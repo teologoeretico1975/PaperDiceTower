@@ -150,6 +150,100 @@ def build():
     return written, moss_mask
 
 
+# --- Muratura da fotoscansione -------------------------------------------
+#
+# Se in textures/src/ c'e' una mappa diffuse ripetibile, la muratura viene
+# derivata da quella invece che generata proceduralmente: blocchi e grana veri
+# battono qualunque procedurale. La sorgente NON e' versionata (pesa MB e non
+# serve a chi usa il kit), quindi restano versionate le tile derivate e la
+# procedurale fa da riserva se la sorgente manca.
+#
+# ATTENZIONE ALLA LICENZA: verificare che la sorgente sia utilizzabile
+# commercialmente prima di vendere il kit. I pack CC0 (Poly Haven) lo sono, altri
+# no, e dal solo nome del file non si distingue.
+#
+# Due rimappature obbligatorie, che sono la parte non ovvia:
+#
+# 1. Schiarire. Una texture per il 3D e' pensata per essere illuminata: questa ha
+#    luminanza media 63/255 e massimo 170, cioe' non contiene nemmeno un bianco.
+#    Su carta il valore stampato e' quello finale, quindi cosi' com'e' coprirebbe
+#    il 75% di inchiostro. Portandola a media 185 scende al 27%.
+# 2. Ridurre la crominanza. Applicare la gamma canale per canale amplifica la
+#    dominante calda della fotografia e la pietra grigia diventa arenaria dorata.
+#    Si rimappa quindi la sola luminanza e la crominanza si comprime.
+PHOTO_SUBDIR = "src"
+PHOTO_PATTERNS = ("*diff*.jpg", "*diff*.png", "*albedo*.jpg", "*albedo*.png")
+PHOTO_SIZE = 1024        # una tile da 80 mm a 300 DPI vuole 945 px: oltre e' peso inutile
+PHOTO_TARGET_MEAN = 185.0
+PHOTO_CHROMA = 0.30
+# La soglia del muschio si ricava dalla copertura desiderata, non si fissa a mano:
+# dipende dall'istogramma della sorgente, e un valore assoluto scelto a occhio
+# aveva prodotto l'1% di copertura invece del 12% voluto.
+# `gain` governa quanto e' netto il bordo della chiazza. Un valore basso (3) dava
+# una frangia che tingeva di verde il 72% della tile: la pietra risultava verde
+# invece che grigia con chiazze. Alzandolo la frangia si stringe attorno alle
+# chiazze vere.
+PHOTO_MOSS = dict(shadow_weight=0.55, patch_weight=0.45, coverage_pct=11.0, gain=11.0)
+MOSS_RGB = (104, 122, 74)
+
+
+def find_photo_source(out_dir):
+    import glob
+    src = os.path.join(out_dir, PHOTO_SUBDIR)
+    for pat in PHOTO_PATTERNS:
+        hits = sorted(glob.glob(os.path.join(src, pat)))
+        if hits:
+            return hits[0]
+    return None
+
+
+def build_from_photo(path):
+    """Muratura e variante col muschio derivate da una mappa diffuse."""
+    img = Image.open(path).convert("RGB").resize((PHOTO_SIZE, PHOTO_SIZE), Image.LANCZOS)
+    a = np.asarray(img).astype(np.float64)
+
+    weights = np.array([0.2126, 0.7152, 0.0722])
+    lum = a @ weights
+    lo, hi = np.percentile(lum, [1, 99])
+    x = np.clip((lum - lo) / (hi - lo), 0.0, 1.0)
+
+    # gamma cercata per bisezione: e' l'esponente che porta la media al valore
+    # voluto, e dipende dall'istogramma della sorgente
+    g_lo, g_hi = 0.5, 12.0
+    for _ in range(50):
+        g = (g_lo + g_hi) / 2.0
+        if (x ** (1.0 / g)).mean() * 255.0 < PHOTO_TARGET_MEAN:
+            g_lo = g
+        else:
+            g_hi = g
+    lum_new = (x ** (1.0 / g)) * 255.0
+    chroma = (a - lum[..., None]) * PHOTO_CHROMA
+    stone = np.clip(lum_new[..., None] + chroma, 0, 255)
+
+    # Il muschio cresce dove l'acqua si ferma, cioe' nei sottosquadri: la maschera
+    # combina la parte scura dell'immagine (le fughe e le cavita') con un rumore
+    # ripetibile che ne rompe l'uniformita'.
+    p = PHOTO_MOSS
+    shadow = 1.0 - lum_new / 255.0
+    patch = fbm(PHOTO_SIZE, 4, 4, SEED + 3300)
+    m = p["shadow_weight"] * shadow + p["patch_weight"] * patch
+    # `coverage_pct` deve significare "quanto muschio si vede", non "quanti pixel
+    # ne hanno una traccia": la soglia si abbassa di mezzo passo di sfumatura,
+    # cosi' i pixel oltre il percentile arrivano a mask > 0.5 e sono visibili,
+    # e sotto resta una frangia morbida.
+    threshold = float(np.percentile(m, 100.0 - p["coverage_pct"])) - 0.5 / p["gain"]
+    mask = np.clip((m - threshold) * p["gain"], 0.0, 1.0)[..., None]
+    moss_col = np.array(MOSS_RGB, dtype=np.float64) * (0.72 + 0.56 * lum_new[..., None] / 255.0)
+    mossy = np.clip(stone * (1 - mask) + moss_col * mask, 0, 255)
+
+    return stone, mossy, {
+        "gamma": round(g, 2),
+        "sorgente": os.path.basename(path),
+        "muschio_visibile_pct": round(100.0 * float((mask > 0.5).mean())),
+        "muschio_con_frangia_pct": round(100.0 * float((mask > 0.0).mean())),
+    }
+
+
 # Tinte piatte: chiare di proposito, cosi' l'inchiostro resta basso e la matita
 # ci scrive sopra. Un colore uniforme si ripete per definizione, quindi una tile
 # minuscola basta: il file pesa poche centinaia di byte.
@@ -185,11 +279,26 @@ def check_tileable(path, tol=14.0):
 
 
 if __name__ == "__main__":
-    files, moss = build()
-    out_dir = os.path.dirname(next(iter(files.values())))
+    out_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "textures")
+    os.makedirs(out_dir, exist_ok=True)
+
+    photo = find_photo_source(out_dir)
+    if photo:
+        stone, mossy, info = build_from_photo(photo)
+        for name, arr in (("stone", stone), ("stone_moss", mossy)):
+            Image.fromarray(arr.astype(np.uint8)).save(
+                os.path.join(out_dir, name + ".png"), optimize=True)
+        print(f"muratura da fotoscansione: {info['sorgente']}  gamma {info['gamma']}  "
+              f"muschio visibile {info['muschio_visibile_pct']}% "
+              f"(con frangia {info['muschio_con_frangia_pct']}%)")
+        files = {n: os.path.join(out_dir, n + ".png") for n in ("stone", "stone_moss")}
+    else:
+        print("nessuna sorgente in textures/src: uso la muratura procedurale")
+        files, moss = build()
+        print("copertura muschio procedurale: %.0f%%" % (100 * (moss > 0.3).mean()))
+
     files.update(build_flat(out_dir))
     for name, path in files.items():
         seam = check_tileable(path)
         print(f"{name:12s} inchiostro {ink_coverage(path):5.1f}%  "
               f"bordi {'ok' if seam['ok'] else 'DISCONTINUI'}  -> {path}")
-    print("copertura muschio nella variante testurizzata: %.0f%%" % (100 * (moss > 0.3).mean()))
