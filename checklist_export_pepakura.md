@@ -61,19 +61,24 @@ Attenzione a un falso allarme: i fianchi della vaschetta hanno normale **tangenz
 
 ---
 
-## 3-bis. Superfici interne in vista — da risolvere quando si applica una skin
+## 3-bis. Superfici interne in vista — risolto
 
 Le normali sono coerenti e corrette: 152 pareti verso l'esterno, 2 tangenziali (i fianchi della vaschetta, per costruzione), 0 verso l'interno. Le facce orizzontali a z=0 puntano in basso, ed è giusto: **l'interno della vaschetta è un unico spazio continuo con l'interno della torre**, collegato attraverso il varco, quindi il "sopra" del pianale è superficie interna. In Pepakura appare grigio perché guardandola dall'alto si vede il retro del foglio, come guardando dentro una scodella.
 
-Finché il modello è senza texture non cambia nulla. **Con una skin applicata sì**: la texture viene stampata sul lato verso cui punta la normale, quindi il pianale della vaschetta risulterebbe decorato sul lato che guarda il tavolo e bianco sul lato in vista — dove invece si appoggiano i dadi ed è la parte più guardata del modello.
+Senza texture non cambia nulla. **Con la texture sì**: viene stampata sul lato verso cui punta la normale, quindi il pianale risultava decorato sul lato che guarda il tavolo e bianco sul lato in vista — dove si appoggiano i dadi ed è la parte più guardata del modello. In Pepakura si vedeva come area grigia piatta mentre le pareti avevano la muratura.
 
-Tre modi per risolverlo, da valutare in fase di texture:
+**Soluzione adottata: `flip_visible_floors()` gira le facce orizzontali a quota zero** — le due del pianale della vaschetta e il pavimento interno della torre. Costa zero pezzi, e verificato in Pepakura: i pezzi ora portano la muratura.
 
-1. **Girare le sole facce del pianale** dopo `recalc_face_normals`. Costa zero pezzi. Effetto collaterale: quelle 3 facce risultano di verso opposto rispetto al fondo del plinto con cui confinano — invisibile, perché il fondo del plinto guarda il tavolo e non si vede mai. Attenzione: un successivo "Recalculate Outside" in Blender annullerebbe la modifica, quindi va fatta come ultimo passo e documentata.
-2. **Pianale come pezzo separato**, da incollare sopra con il verso giusto. Un pezzo piatto in più, nessuna incoerenza nella mesh.
-3. **Lasciarlo bianco**, se la carta grezza passa per pavimento in pietra. Zero lavoro, resa più debole.
+Il pavimento interno è incluso perché attraverso il varco se ne vede una striscia davanti al bordo della rampa: lasciarlo fuori avrebbe spostato il problema di dieci centimetri invece di risolverlo.
 
-Nota che il problema riguarda **solo** il pianale della vaschetta: gli altri interni (fusto, corpo principale) non si vedono, e per loro la carta bianca all'interno è la norma nel papercraft.
+Due cose da sapere se un domani si volesse "correggere" questa scelta:
+
+- **Per una superficie aperta non esiste un orientamento globale che metta il lato stampato in vista ovunque.** Seguendo il guscio dall'esterno si arriva al pianale, e lì il lato "fuori" è quello che guarda il tavolo. Qualche incoerenza di avvolgimento è inevitabile: la scelta è solo dove metterla, e girando i pavimenti finisce sugli spigoli a filo del tavolo, che non si vedono. Non è un difetto topologico — il controllo di manifold-ness resta a 0.
+- **Va eseguita come ultimo passo** sulla geometria: qualunque `recalc_face_normals` successivo, o un "Recalculate Outside" a mano in Blender, la annullerebbe in silenzio.
+
+Il piano B, se servisse: pianale come pezzo separato da incollare sopra. Costa un pezzo piatto, non ha incoerenze, e irrobustisce il punto dove i dadi atterrano.
+
+Gli altri interni (fusto, corpo principale) non si vedono, e per loro la carta bianca all'interno è la norma nel papercraft.
 
 ## 4. Cosa NON fare
 

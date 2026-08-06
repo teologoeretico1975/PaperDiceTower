@@ -1526,6 +1526,38 @@ def export_for_pepakura(target_height_mm=None, out_dir=None,
     }
 
 
+def flip_visible_floors(obj, z=0.0, tol=1e-3):
+    """Gira le facce orizzontali a quota *z*, perche' la texture cada sul lato in vista.
+
+    Le normali del guscio sono coerenti e corrette: l'interno della vaschetta e' un
+    unico spazio continuo con l'interno della torre attraverso il varco, quindi il
+    "sopra" del pianale e' superficie interna e la normale in basso e' quella
+    esterna. Senza texture non cambia nulla. Con la texture si', perche' viene
+    stampata sul lato verso cui punta la normale: il pianale risulterebbe decorato
+    sul lato che guarda il tavolo e bianco sul lato in vista, dove si appoggiano i
+    dadi ed e' la parte piu' guardata del modello.
+
+    Per una superficie aperta come questa non esiste un orientamento globale che
+    metta il lato stampato in vista **ovunque**: il pianale e' raggiungibile
+    seguendo il guscio dall'esterno, quindi qualche incoerenza e' inevitabile.
+    Girando i pavimenti a z=0 la si sposta sugli spigoli a filo del tavolo, che non
+    si vedono. Va eseguita come ultimo passo: un successivo recalc_face_normals la
+    annullerebbe.
+    """
+    mesh = obj.data
+    bm = bmesh.new()
+    bm.from_mesh(mesh)
+    target = [f for f in bm.faces
+              if all(abs(v.co.z - z) < tol for v in f.verts) and abs(f.normal.z) > 0.9]
+    for f in target:
+        f.normal_flip()
+    bm.normal_update()
+    bm.to_mesh(mesh)
+    mesh.update()
+    bm.free()
+    return {"facce_girate": len(target)}
+
+
 def check_page_fit(target_height_mm=None, sides=None, page_mm=(200.0, 287.0)):
     """Stima se i pezzi srotolati entrano in una pagina, alla scala di stampa data.
 
@@ -1641,6 +1673,10 @@ def build_all(sides=None):
     wall_report = check_mesh(muro)
     wall_report["expected_boundary_edges"] = wall_info["boundary_edges"]
 
+    # Ultimo passo sulla geometria della torre: dopo di qui nessun ricalcolo delle
+    # normali, altrimenti il ribaltamento dei pavimenti viene annullato.
+    floors = flip_visible_floors(torre)
+
     # Il muro sta tutto a livello del suolo, quindi va interamente mossato.
     # La rampa va texturizzata benche' sia interna: e' in piena vista attraverso il
     # varco ed e' la superficie su cui i dadi atterrano. Anche i deflettori, perche'
@@ -1653,6 +1689,7 @@ def build_all(sides=None):
         "sides": sides,
         "marks": marks,
         "materiali": materiali,
+        "pavimenti_girati": floors,
         "windows": n_windows,
         "tray": tray,
         "slits": slits,

@@ -94,10 +94,9 @@ Carta **200 g/m²**, e alla scala di riferimento si può salire fino a ~250: il 
 
 La grafica è volutamente **di base**: il rischio da chiudere per primo era che la versione gratuita di Pepakura scartasse la texture, e non valeva la pena investire prima di saperlo. Ora che passa, il passo che darebbe più profondità è cuocere l'occlusione ambientale nella texture (i rientri delle finestre e gli angoli più scuri).
 
-Due cose aperte:
+**Pavimenti in vista: risolto.** Il pianale della vaschetta e il pavimento interno sono superfici interne (l'interno della vaschetta è un unico spazio continuo con quello della torre attraverso il varco), quindi la texture finiva sul lato che guarda il tavolo. `flip_visible_floors()` gira le facce orizzontali a quota zero, a costo di zero pezzi, e verificato in Pepakura. **Va eseguita come ultimo passo**: un `recalc_face_normals` successivo la annulla in silenzio. Vedi `checklist_export_pepakura.md`, sezione 3-bis, per il motivo per cui qualche incoerenza di avvolgimento è inevitabile su una superficie aperta.
 
-- **Copertura d'inchiostro ~45%** su 1.051 cm². Per un modello che l'acquirente stampa a casa è un costo reale: una variante più chiara consumerebbe meno e lascerebbe leggere meglio le linee di Pepakura.
-- **Il pianale della vaschetta è superficie interna** (l'interno della vaschetta è un unico spazio continuo con quello della torre attraverso il varco), quindi la texture finisce sul lato che guarda il tavolo e il lato in vista resta bianco. Tre soluzioni con costi e controindicazioni: `checklist_export_pepakura.md`, sezione 3-bis. **Da verificare sul PDF texturizzato**, che è la prima occasione in cui il problema si vede davvero.
+Una cosa aperta: **copertura d'inchiostro ~45%** su 1.051 cm². Per un modello che l'acquirente stampa a casa è un costo reale, e una variante più chiara lascerebbe anche leggere meglio le linee di Pepakura.
 
 ## 7. Trappole di ambiente
 
