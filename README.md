@@ -2,6 +2,8 @@
 
 Modello Blender di una torre dadi fantasy low-poly, pensato per essere esportato e "unfoldato" con Pepakura in un prodotto papercraft (ispirato a torri dadi vendute su Etsy).
 
+> **Se stai prendendo in mano il progetto ora, parti da [HANDOVER.md](HANDOVER.md).**
+
 ## Vincolo tecnico
 
 Geometria **completamente faceted**: solo facce piatte, spigoli netti. Niente subdivision surface, sculpting o superfici curve smooth.
