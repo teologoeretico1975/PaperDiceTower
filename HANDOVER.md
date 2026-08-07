@@ -1,8 +1,8 @@
 # Handover — PaperDiceTower
 
-Stato al 2026-08-06. Questo file è il punto di ingresso: orienta e rimanda ai documenti di dettaglio, senza duplicarli.
+Stato al 2026-08-07. Questo file è il punto di ingresso: orienta e rimanda ai documenti di dettaglio, senza duplicarli.
 
-Repo: <https://github.com/teologoeretico1975/PaperDiceTower> · branch `main` · ultimo commit `6a74f56`
+Repo: <https://github.com/teologoeretico1975/PaperDiceTower> · branch `main` · stato di riferimento al commit `fa20dbd` (azzeramento del capitolo texture)
 
 ---
 
