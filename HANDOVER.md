@@ -130,7 +130,7 @@ Due cose da non sbagliare:
 - **Il fusto esce in tre pezzi, non uno.** Le feritoie sono 5 + 1 + 1: se sulla pagina 3 mancasse una striscia il tubo non si chiude. E' la verifica piu' facile a occhio.
 - **I deflettori possono stare su qualunque pagina.** Sono dentro il fusto e non si vedono mai, quindi due sul verde vanno bene. Sono i primi da spostare se serve spazio.
 
-Aperta e da decidere: la **rampa** e' sul grigio ma e' in piena vista attraverso il varco, ed e' la superficie su cui il dado rotola fuori. Se il verde vuol dire "il suolo", appartiene a quel gruppo.
+**La rampa resta sul grigio**, deciso il 2026-08-07. Era stata segnalata come dubbio perche' e' in piena vista attraverso il varco ed e' la superficie su cui il dado rotola fuori, quindi col verde si leggerebbe come suolo. Sta sulla pietra: la lettura e' pietra costruita contro l'erba. Non e' una questione aperta.
 
 Il corpo principale esce **attaccato alle due bande di rastremazione** tramite pieghe, quindi condividono il colore per forza: separarle richiederebbe un taglio esplicito in Pepakura.
 

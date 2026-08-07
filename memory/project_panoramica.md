@@ -27,6 +27,8 @@ Costo della scelta: 4 pagine A4 invece di 2 (3 impaginando a mano), e area della
 
 **Suddivisione in blocchi per il cartoncino, adottata il 2026-08-07:** l'utente ha impaginato a mano **due colori su quattro pagine** - pietra sulle pagine 1-3, verde erba sulla 4 - invece dei cinque colori proposti. Piu' semplice e piu' economica: il conto delle pagine dipende dal **numero di colori, non dalla scala**, perche' ogni colore vuole almeno un foglio suo. Pepakura non ha un colore per pezzo, quindi un colore = uno o piu' fogli dedicati. Dove serve separare due blocchi, si separa **in Pepakura e non in Blender**: un taglio interno alla stessa mesh porta linguetta ed Edge ID accoppiati, mentre spezzare l'oggetto in Blender produce bordi liberi senza niente da incollare.
 
+**La rampa sta col gruppo pietra**, non col verde, deciso il 2026-08-07 dopo averlo sollevato come dubbio: e' visibile attraverso il varco, quindi col verde leggerebbe come suolo, mentre sulla pietra legge come costruito. Se qualcuno la trovasse "fuori posto" rispetto al pianale verde, e' voluto.
+
 **Da ricordare sul fusto:** esce in **tre** pezzi, non uno, con le 7 feritoie distribuite 5 + 1 + 1. Se in stampa ne manca una il tubo non si chiude, ed e' la svista piu' facile da fare.
 
 **Nuovo strumento, `tools/pattern.py`:** legge il PDF di Pepakura senza librerie esterne (e' vettoriale, si decomprime con zlib), misura i pezzi veri riconoscendo le feature dalla firma dimensionale, e rigenera il pattern in due varianti con il layer di decoro, nelle coordinate originali (scarto verificato 0,000000 mm). Chiude l'unico anello della catena che non era mai stato validato: **l'output di Pepakura**, non la mesh.
