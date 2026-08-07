@@ -249,11 +249,15 @@ def build_from_photo(path):
 # minuscola basta: il file pesa poche centinaia di byte.
 FLAT_STONE = (214, 211, 203)
 FLAT_MOSS = (196, 205, 182)
+# Bianco puro: la stampa si riduce alle sole linee di taglio e piega disegnate da
+# Pepakura. E' la base della scala di varianti, quella che costa meno inchiostro.
+LINE_WHITE = (255, 255, 255)
 
 
 def build_flat(out_dir):
     written = {}
-    for name, rgb in (("flat_stone", FLAT_STONE), ("flat_moss", FLAT_MOSS)):
+    for name, rgb in (("flat_stone", FLAT_STONE), ("flat_moss", FLAT_MOSS),
+                      ("line_white", LINE_WHITE)):
         path = os.path.join(out_dir, name + ".png")
         Image.new("RGB", (8, 8), rgb).save(path, optimize=True)
         written[name] = path

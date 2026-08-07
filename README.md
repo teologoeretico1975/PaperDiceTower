@@ -137,12 +137,21 @@ Il costo di stampa è un vincolo reale, non un dettaglio: si stampano 1.051 cm²
 
 | variante | inchiostro | per chi |
 |---|---|---|
-| `muratura` | 28% | vuole il modello finito appena assemblato |
-| `tinte_piatte` | 18% | vuole colorarlo a mano, o spendere meno di inchiostro |
+| `linee` | 0% | stampa solo tagli e pieghe: base bianca da colorare o dipingere |
+| `tinte_piatte` | 18% | tinte chiare già stampate, da rifinire a mano |
+| `muratura` | 28% | modello finito appena assemblato |
 
-Geometria e UV sono identiche: cambiano solo i materiali, quindi `export_all_variants()` riassegna e riesporta senza ricostruire nulla. I nomi delle immagini differiscono per variante, così i file copiati in `export/` non si sovrascrivono.
+Geometria e UV sono identiche fra le varianti: cambiano solo i materiali, quindi `export_all_variants()` riassegna e riesporta senza ricostruire nulla. I nomi delle immagini differiscono per variante, così i file copiati in `export/` non si sovrascrivono.
 
-Le tinte piatte hanno un vantaggio collaterale: sono abbastanza chiare da lasciare perfettamente leggibili le linee di taglio e piega di Pepakura, che con la muratura di medio grigio ci competono.
+Le tinte piatte e le linee hanno un vantaggio collaterale: sono abbastanza chiare da lasciare perfettamente leggibili le linee di taglio e piega di Pepakura, che con la muratura di medio grigio ci competono.
+
+### Aggiungere una skin
+
+Costa **una riga** in `TEXTURE_VARIANTS` più una coppia di tile: la geometria non si tocca. Ma il costo vero non è qui.
+
+**Ogni skin richiede la sua impaginazione in Pepakura**, e con la versione gratuita l'impaginazione non è salvabile: sono ~15 minuti di lavoro manuale per skin, ogni volta. Con la licenza si salva un `.pdo`, si sostituisce la texture e si riesporta in pochi minuti.
+
+Quindi un catalogo di skin è economico solo con la licenza. Da verificare, perché decide il flusso di lavoro: se Pepakura permetta di **sostituire l'immagine** in un `.pdo` già impaginato. Se sì, una sola impaginazione serve tutte le skin.
 
 La guida per colorare la versione a tinte piatte è in [ISTRUZIONI.md](ISTRUZIONI.md), che è il documento rivolto all'acquirente — pubblico diverso da questo README.
 

@@ -16,13 +16,17 @@ Torre alta **30 cm** in cartamodello. I dadi si lanciano dall'alto, rimbalzano s
 
 ---
 
-## Due versioni: scegli quale stampare
+## Tre versioni: scegli quale stampare
 
-Il kit contiene lo stesso modello in due vesti. Non c'è una versione migliore: cambiano il costo di stampa e quanto lavoro vuoi metterci tu.
+Lo stesso modello in tre vesti. Non c'è una versione migliore: cambiano il costo di stampa e quanto lavoro vuoi metterci tu.
 
-**Muratura completa** — la pietra è già stampata, muschio compreso. Pronta appena assemblata. Copre di inchiostro circa il 45% della superficie, cioè quasi metà di 4-5 fogli A4: se stampi a getto d'inchiostro, mettilo in conto.
+**Muratura** — la pietra è già stampata, muschio compreso: pronta appena assemblata. È la più esigente in inchiostro, circa il 28% della superficie su 4-5 fogli A4.
 
-**Tinte piatte** — colori uniformi e chiari, da colorare a mano. Costa un terzo dell'inchiostro, le linee di taglio e piega si leggono meglio, e le tinte accettano bene matita colorata, pastello e pennarello. Guida ai colori più sotto.
+**Tinte piatte** — colori uniformi e chiari, pensati per essere rifiniti a mano. Circa il 18% di inchiostro, e le tinte accettano bene matita colorata, pastello e pennarello.
+
+**Solo linee** — bianca, con stampati soltanto i tagli e le pieghe. Costo di inchiostro praticamente nullo, massima libertà se vuoi dipingerla tu, e le linee da seguire sono nitidissime perché non hanno niente sotto.
+
+La guida ai colori più sotto vale per le ultime due.
 
 ---
 
@@ -68,13 +72,13 @@ Prima di considerarla finita, fai passare il **dado più grosso** del set: deve 
 
 ---
 
-## Guida ai colori (versione a tinte piatte)
+## Guida ai colori
 
-Le tinte stampate sono già una base: puoi lasciarle così o lavorarci sopra. Tutto quello che segue è facoltativo.
+Vale per la versione a tinte piatte e per quella a sole linee. Tutto quello che segue è facoltativo.
 
 ### Dove sono i due toni
 
-Il grigio chiaro è la pietra. Il verdino è la fascia con il muschio: la base del plinto, i primi 4 cm del fusto e tutto il muro di cinta. Sono le zone che nella realtà stanno a contatto col terreno.
+Nella versione a tinte piatte il grigio chiaro è la pietra e il verdino è la fascia con il muschio: la base del plinto, i primi 4 cm del fusto e tutto il muro di cinta. Sono le zone che nella realtà stanno a contatto col terreno, ed è lì che conviene mettere il verde anche partendo dalla versione bianca.
 
 ### Un metodo che funziona
 

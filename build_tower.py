@@ -1325,6 +1325,10 @@ TEXTURE_VARIANTS = {
     "muratura": (("Pietra", "stone.png"), ("Pietra_muschio", "stone_moss.png")),
     "tinte_piatte": (("Pietra_piatta", "flat_stone.png"),
                      ("Pietra_piatta_muschio", "flat_moss.png")),
+    # Sole linee: la stampa si riduce ai tagli e alle pieghe disegnate da Pepakura.
+    # E' il gradino base della scala, e la geometria non cambia — aggiungere una
+    # skin nuova significa aggiungere una riga qui e una coppia di tile.
+    "linee": (("Bianco", "line_white.png"), ("Bianco_muschio", "line_white.png")),
 }
 
 
