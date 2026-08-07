@@ -104,6 +104,7 @@ Due merli adiacenti devono avere la **stessa altezza**. Se differiscono, al loro
 ## Struttura della cartella
 
 - `build_tower.py` — generatore parametrico del modello (fonte di verità)
+- `tools/pattern.py` — legge il PDF di Pepakura, ne valida i pezzi e ne rigenera il pattern con il layer di decoro
 - `PaperDiceTower.blend` — scena Blender, variante a **9 lati**
 - `PaperDiceTower7.blend` — variante semplificata a **7 lati** (vedi sotto)
 - `export/` — OBJ per Pepakura più i PDF del pattern e gli screenshot del layout. Tutto versionato: con la versione gratuita di Pepakura il progetto `.pdo` non è salvabile, quindi il PDF e lo screenshot sono l'unico record dell'impaginazione manuale
@@ -136,4 +137,29 @@ Punti dove è più probabile dover tornare sui parametri, in ordine di rischio (
 3. **Catena di triangoli del plinto** (`PLINTH_JAG`) — pieghe ravvicinate, scomode da cordonare.
 4. **Varco di uscita alto 41,5 mm** contro un d20 da ~20 mm — ampio margine, ma va provato col set di dadi vero (`opening_top` in `add_dice_tray`).
 
-**Materiali e texture sono azzerati** e da ripensare dal concept: le prove fatte funzionavano tecnicamente ma il risultato era esteticamente mediocre. Il modello si esporta bianco, senza UV né materiali. Prima di ritentare leggere `memory/reference_texture_tentativi.md`, che elenca le strade già battute e il vincolo di fondo.
+### Validazione del cartamodello
+
+Oltre ai controlli sulla mesh c'è un controllo sull'**output di Pepakura**, che per molto tempo era l'unico anello non verificato della catena:
+
+```bash
+python tools/pattern.py inventario export/PaperDiceTower7_300.pdf
+```
+
+Non servono librerie PDF: il file è vettoriale e si decomprime con zlib. Il tool misura i pezzi veri e riconosce le feature dalla firma dimensionale. Risultato alla scala di riferimento:
+
+| | |
+|---|---|
+| pagine | 4 × A4, area utile 200 × 287 mm |
+| segmenti vettoriali | 636, più 48 tessere raster di sfondo (innocue) |
+| finestre ad arco | 7 × 42,0 × 11,8 mm |
+| feritoie | 4 × 3,9 × 35,0 + 3 × 3,9 × 30,6 mm |
+| deflettori | 4 × 33,8 × 68,1 mm |
+| pezzo più grande | 180,8 × 250,0 mm — **entra in A4, niente da spezzare** |
+
+Il punto fragile confermato è uno solo: le feritoie, larghe **3,9 mm**, che sono la dimensione minima di tutto il cartamodello.
+
+### Grafica
+
+**Il colore viene dal cartoncino colorato, non dalla stampa**, su una palette chiara. Il decoro è **vettoriale e registrato sulle feature**: `tools/pattern.py pdf` lo genera dal contorno reale delle finestre (archivolto a conci, chiave d'arco, soglia) e produce due varianti del pattern, `_vettoriale.pdf` e `_decoro.pdf`, nelle coordinate di pagina originali.
+
+Perché questa strada e non una texture: una tile ripetibile non sa dove si trova sul modello, quindi non può disegnare l'arco attorno a *quella* finestra — è il vincolo che ha fatto abbandonare il capitolo texture. Il cartamodello 2D invece lo sa. Vedi `memory/reference_decoro_registrato.md` e `memory/reference_texture_tentativi.md`.

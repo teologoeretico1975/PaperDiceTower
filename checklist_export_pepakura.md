@@ -155,9 +155,10 @@ Nell'ordine, dopo aver aperto `export/PaperDiceTower.obj`:
 | 4 | *Display Options* (Edit Mode) | attivare **`Edge ID`**, **`Page Number`**, **`Check Overlapping Parts`**, **`Hide nearly flat folding lines`** (soglia 175°); `Flaps` è già attivo |
 | 5 | — | verificare che la **scala** dica **200 mm** di altezza |
 | 6 | `2D Layout` → `Re-layout Parts...` | prima passata automatica: si ferma a 4 pagine |
-| 7 | pannello 2D | **disporre a mano** fino a 2 pagine: appaiare le due strisce grandi (corpo principale ~192×52 mm e fusto ~169×104 mm) nello stesso verso sulla prima pagina; base, muro, rampa e vaschetta sulla seconda. Ruotare di 90° la catena del plinto (~215 mm, più larga di un A4 in verticale) |
+| 7 | pannello 2D | **disporre a mano**. Per la versione monocolore: comprimere fino a 2 pagine appaiando le due strisce grandi nello stesso verso. Per la versione a **cartoncino colorato**: raggruppare invece per colore, una pagina per blocco, accettando ~6 pagine — colori diversi non possono condividere il foglio, quindi il conto dipende dal numero di colori e non dalla scala. La partizione richiesta esiste già: plinto, fusto, corpo, pianali e muro escono come pezzi distinti. Vedi HANDOVER sezione 6 |
 | 8 | — | controllare che `Check Overlapping Parts` non evidenzi nulla |
-| 9 | `File` → `Print to PDF...` | `Ctrl+Shift+P` |
+| 9 | `File` → `Print to PDF...` | `Ctrl+Shift+P`. È l'unica via d'uscita disponibile: tutto `File → Export` è bloccato dalla licenza (vedi `memory/reference_pepakura_free.md`) |
+| 10 | terminale | `python tools/pattern.py inventario export/<file>.pdf` — misura i pezzi veri nel PDF e verifica che la scala non si sia persa: 7 finestre da 42,0 × 11,8 mm, 7 feritoie da 3,9 mm, nessun pezzo oltre 200 × 287 mm |
 
 Risultato atteso: 2 pagine A4, PDF vettoriale di ~27 KB.
 

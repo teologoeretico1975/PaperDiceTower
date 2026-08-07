@@ -2,7 +2,7 @@
 
 Stato al 2026-08-07. Questo file è il punto di ingresso: orienta e rimanda ai documenti di dettaglio, senza duplicarli.
 
-Repo: <https://github.com/teologoeretico1975/PaperDiceTower> · branch `main` · stato di riferimento al commit `fa20dbd` (azzeramento del capitolo texture)
+Repo: <https://github.com/teologoeretico1975/PaperDiceTower> · branch `main`. Per l'ultimo stato: `git log --oneline -5` — un hash scritto qui invecchia a ogni commit.
 
 ---
 
@@ -44,6 +44,22 @@ export_for_pepakura(target_height_mm=200)                       # scrive export/
 ```
 
 Il report di verifica deve dare **0** su `non_manifold_edges`, `loose_verts`, `non_planar_faces`, e `boundary_edges` pari a `expected_boundary_edges`. Perché quei controlli e non altri: `checklist_export_pepakura.md`.
+
+Dopo l'unfold c'è un secondo controllo, sull'**output di Pepakura** invece che sulla mesh — per molto tempo era l'unico anello non verificato:
+
+```bash
+python tools/pattern.py inventario export/PaperDiceTower7_300.pdf
+```
+
+Legge il PDF (senza librerie PDF: è vettoriale, si decomprime con zlib) e misura i pezzi veri, riconoscendo le feature dalla firma dimensionale. Alla scala di riferimento deve trovare 7 finestre da 42,0 × 11,8 mm, 7 feritoie da 3,9 mm di larghezza, 4 deflettori da 33,8 × 68,1, e **nessun pezzo oltre i 200 × 287 mm stampabili**: il più grande è 180,8 × 250. Se quelle misure non tornano, la scala si è persa fra Blender e la stampa.
+
+Lo stesso modulo riscrive il pattern in due varianti:
+
+```bash
+python tools/pattern.py pdf export/PaperDiceTower7_300.pdf
+```
+
+Produce `_vettoriale.pdf` (solo linee) e `_decoro.pdf` (linee + decoro), nelle coordinate di pagina originali, e verifica da sé che i segmenti strutturali siano identici all'originale — **scarto 0,000000 mm**. Non ricopia le 48 tessere raster di sfondo bianco, quindi l'uscita è vettoriale pura: 7 KB invece di 55.
 
 Perché uno script e non solo il `.blend`: il file Blender è un binario opaco in git, e modellare a incrementi rendeva ogni ritocco di proporzioni una ricostruzione manuale.
 
@@ -88,17 +104,51 @@ Carta **200 g/m²**, e alla scala di riferimento si può salire fino a ~250: il 
 
 **Attenzione a un vincolo operativo:** con la versione gratuita di Pepakura non si può salvare il `.pdo`. Ogni reimport dell'OBJ azzera impostazioni e impaginazione, che vanno rifatte a mano (~15 minuti). Quindi: **fare tutto in una sessione sola**. Per questo in `export/` sono versionati anche i PDF e gli screenshot dei layout: sono l'unico record di quel lavoro, e da lì si ricostruisce la disposizione invece di ripartire da zero. La ricetta dei passaggi è la sezione 6 di `checklist_export_pepakura.md`. Se il progetto va in vendita la licenza si ripaga subito.
 
-## 6. Materiali e texture: azzerati, da ripensare
+## 6. Grafica: il concept scelto
 
-**Il capitolo e' stato rimosso il 2026-08-07** su richiesta del committente: "i test fatti fino adesso danno in output risultati mediocri, compreso l'applicazione delle skin procedurali e quelle scaricate con licenza a pagamento". Si riparte da concept.
+Il capitolo texture e' stato azzerato il 2026-08-07 ("risultati mediocri, comprese le skin procedurali e quelle scaricate a pagamento"). Il concept che lo sostituisce e' **il contrario di una texture**, e nasce da un'osservazione precisa.
 
-Nessuno dei fallimenti era tecnico. Tile ripetibili senza cuciture, Pepakura che importava e mostrava la texture sui pezzi 2D, export autosufficiente con `.mtl` e PNG, doppio layer UV per le skin dipinte verificato end-to-end: tutto funzionava. Il problema era **estetico**, e la prossima volta va affrontato come tale invece che come problema di generazione.
+Il vincolo che aveva ucciso le texture, registrato in `memory/reference_texture_tentativi.md`: *una tile ripetibile non sa dove si trova sul modello*, quindi non puo' disegnare l'arco attorno a **quella** finestra. Ma **il cartamodello 2D lo sa**: ogni finestra, piega e foro ha coordinate note. Quindi il decoro non e' un problema di texture, e' disegno sul pattern. Dettagli in `memory/reference_decoro_registrato.md`.
 
-Quello che resta e' l'elenco delle strade gia' battute e del perche' non hanno funzionato, in `memory/reference_texture_tentativi.md`. **Leggerlo prima di ritentare**: contiene il vincolo di fondo, cioe' che una tile ripetibile non sa dove si trova sul modello e quindi lo stile hand-painted le e' strutturalmente precluso.
+Tre decisioni operative:
 
-Il codice rimosso resta recuperabile dalla storia git (commit `2d6a87d` in avanti) se il nuovo concept ne riusa dei pezzi: le due rimappature per portare una fotoscansione dal 3D alla stampa, in particolare, sono conoscenza che vale a prescindere dallo stile scelto.
+- **Il colore viene dal cartoncino, non dalla stampa.** Palette chiara (sabbia, grigio perla, crema, verde salvia), scelta dal committente. Costa zero lavoro grafico, e' cio' che fanno le listing nella fascia di prezzo giusta, e sposta l'estetica sul cartoncino che sceglie l'acquirente invece che su una texture generata. Con palette chiara le linee nere restano leggibili, quindi **non** serve la stampa specchiata sul retro ne' il plotter da taglio.
+- **Il decoro e' vettoriale e registrato sulle feature.** `tools/pattern.py` lo genera dal contorno reale delle finestre: archivolto a conci, chiave d'arco, soglia con aggetto. Nascendo dalla feature sta dentro il pezzo per costruzione, quindi **non ha bisogno di ritaglio** — la proprieta' che una tile non puo' avere.
+- **Divisione del lavoro sul disegno.** Lo script genera cio' che e' *derivabile* dalla geometria; lo stile no. Il piano concordato: il committente disegna **un** pannello in Inkscape sopra `export/PaperDiceTower7_300_vettoriale.pdf`, e lo script lo replica sugli altri sei con la rotazione corretta. La torre e' a simmetria 7, quindi il disegno unico e' un settimo del lavoro apparente.
 
-L'esportatore e' tornato a `export_uv=False, export_materials=False`.
+### Suddivisione in blocchi per il cartoncino colorato
+
+**Pepakura non ha un colore per pezzo: un colore = uno o piu' fogli dedicati.** Quindi un blocco puo' avere un colore suo solo se e' un pezzo separato nel layout 2D — e in gran parte **lo e' gia**: plinto, fusto, corpo, pianali e muro escono come pezzi distinti (vedi l'inventario, sezione 3).
+
+Dove invece Pepakura tiene insieme due blocchi, si separa **in Pepakura e non in Blender**. Motivo controintuitivo: un taglio interno alla stessa mesh e' uno spigolo tagliato, e Pepakura ci mette linguetta ed Edge ID accoppiati. Spezzare `Torre` in oggetti separati in Blender produrrebbe invece due **bordi liberi**: nessuna linguetta, perche' non c'e' niente da incollare, e nessuna numerazione che li accoppi. Servirebbe modellare un collarino telescopico a mano.
+
+Partizione di colore proposta (5 gruppi, non i 4 di assemblaggio: "corpo" da solo sarebbe il 93% dell'altezza e non fa composizione):
+
+| # | blocco | quota (unita') | a 300 mm | colore |
+|---|---|---|---|---|
+| 1 | plinto | 0 → 0,45 | 20 mm | grigio scuro (roccia) |
+| 2 | fusto con feritoie | 0,45 → 3,65 | 140 mm | pietra chiara |
+| 3 | corpo principale con finestre | 4,38 → 5,88 | 66 mm | tono piu' caldo, e' il fuoco visivo |
+| 4 | parapetto e merli | 5,88 → 6,84 | 29 mm | come il plinto: base e corona scure incorniciano il fusto |
+| 5 | pianale, rampa, muro | al suolo | — | terra o verde |
+
+Deflettori: invisibili dentro il fusto, carta di scarto.
+
+Costo: **le pagine passano da 4 a ~6**, e il conto e' dominato dal **numero di colori, non dalla scala** — ogni colore vuole almeno un foglio suo. E' l'argomento per fermarsi a 5.
+
+Da verificare quando si impagina: dal PDF il corpo principale esce **attaccato alle due bande di rastremazione** tramite pieghe, quindi condividono il colore se non si separano. Accendere `Part Name` nelle Display Options da' la mappa autorevole pezzo-per-pezzo.
+
+### Posizionamento, che condiziona tutto il resto
+
+Prezzi rilevati su Etsy (vedi `memory/reference_etsy_posizionamento.md`): i PDF di casette da colorare stanno a **2-5 €**, i template low-poly su cartoncino colorato a **13-24 €**, i kit fisici pretagliati a **55 €**. Sono scaffali diversi. La torre e' alta 30 cm, ha 13 pezzi e **fa una cosa** — tira i dadi: il suo posto e' il secondo. Vendere il template bianco da colorare resta valido come *variante*, non come prodotto principale, o si finisce sullo scaffale da 3 €.
+
+### Stato di Pepakura e licenza
+
+Verificato aprendo i menu: `File → Print to PDF` **funziona** in versione gratuita, ed e' da lì che viene il pattern. Sono invece **bloccati dalla licenza** l'export SVG/DXF/EPS e `3D Model & Image for Texture Editing`.
+
+Conseguenza pratica: **la licenza non serve per la prova di stampa**, che e' il prossimo passo. Servirebbe per l'export vettoriale verso i plotter da taglio (che con la palette chiara non e' necessario) e per salvare il `.pdo`. Nota su quella voce bloccata: il suo dialogo avvisa che *azzererebbe tutte le UV*, quindi cancellerebbe quelle provenienti da Blender. Le due strade sono alternative, e quella bloccata e' anche quella che toglierebbe il controllo.
+
+Il codice texture rimosso resta recuperabile dalla storia git (commit `2d6a87d` in avanti). L'esportatore OBJ resta a `export_uv=False, export_materials=False`.
 
 ## 7. Trappole di ambiente
 
@@ -110,10 +160,14 @@ L'esportatore e' tornato a `export_uv=False, export_materials=False`.
 
 | file | contenuto |
 |---|---|
-| `build_tower.py` | generatore parametrico — **fonte di verità** |
-| `PaperDiceTower.blend` | scena Blender |
-| `export/*.obj` | input per Pepakura, scalati a 200 mm |
+| `build_tower.py` | generatore parametrico della mesh — **fonte di verità del modello** |
+| `tools/pattern.py` | legge, valida e decora il cartamodello uscito da Pepakura |
+| `PaperDiceTower7.blend` | scena Blender, versione di riferimento a 7 lati |
+| `PaperDiceTower.blend` | variante a 9 lati, conservata per il confronto |
+| `export/*.obj` | input per Pepakura |
+| `export/*.pdf` | pattern: quello di Pepakura più le due varianti rigenerate |
 | `README.md` | descrizione del modello e dello stato |
+| `ISTRUZIONI.md` | documento per l'**acquirente** |
 | `checklist_export_pepakura.md` | verifiche prima dell'unfold, scala, note di assemblaggio |
 | `memory/MEMORY.md` | indice delle note di collaborazione |
 | `screenshots/` | 31 catture, una per iterazione: utili per ricostruire il perché di una forma |

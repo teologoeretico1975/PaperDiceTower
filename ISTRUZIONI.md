@@ -1,6 +1,8 @@
 # Torre dei dadi in carta — istruzioni
 
-Torre alta **30 cm** in cartamodello, da stampare in bianco e colorare come preferisci. I dadi si lanciano dall'alto, rimbalzano sui deflettori interni e usciti dal varco si fermano nella vaschetta.
+Torre alta **30 cm** in cartamodello. I dadi si lanciano dall'alto, rimbalzano sui deflettori interni e usciti dal varco si fermano nella vaschetta.
+
+Il colore lo dà il **cartoncino**: ogni pagina del cartamodello raccoglie i pezzi di una parte della torre, così si stampa ciascuna su un colore diverso e non serve colorare niente. Se preferisci, stampa tutto su bianco e colora a mano: il cartamodello è lo stesso.
 
 ---
 
@@ -13,6 +15,20 @@ Torre alta **30 cm** in cartamodello, da stampare in bianco e colorare come pref
 | pieghe | una stecca per cordonare, o il dorso di una lama smussata |
 | colla | stick per le superfici larghe, vinilica per le linguette piccole |
 | facoltativo | carta velina colorata (ambra o blu) per le finestre |
+
+### Colori consigliati
+
+Tinte **chiare**: le linee di taglio e piega sono stampate in nero, e su un cartoncino scuro non si vedono più.
+
+| pagina | parte | colore |
+|---|---|---|
+| 1 | base rocciosa | grigio medio |
+| 2 | fusto, quello con le feritoie | sabbia o pietra chiara |
+| 3 | corpo con le finestre | un tono più caldo: è la parte che si guarda |
+| 4 | parapetto e merlature | grigio medio, come la base |
+| 5 | vaschetta, rampa e muro di cinta | terra o verde salvia |
+
+I deflettori interni non si vedono mai: vanno bene su qualunque ritaglio avanzato.
 
 ---
 
