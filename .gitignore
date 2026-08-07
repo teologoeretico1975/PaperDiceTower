@@ -439,18 +439,6 @@ FodyWeavers.xsd
 # .obj significa output del compilatore C/C++.
 !export/*.obj
 
-# Pack di texture scaricati (Poly Haven e simili): decine di MB per archivio, che
-# git conserverebbe per sempre e ogni clone scaricherebbe. Nel papercraft servono
-# solo le mappe diffuse: displacement e normal map servono a illuminare una
-# superficie 3D, mentre un foglio stampato non ha rilievo. Si versionano quindi
-# solo le tile derivate in textures/*.png, non gli archivi di partenza.
-textures/*.zip
-# Sorgenti delle texture (mappe diffuse da fotoscansione): MB per file, e a chi usa
-# il kit non servono. Restano versionate le tile derivate in textures/*.png, che
-# sono il deliverable, e make_textures.py rigenera da qui se la sorgente c'e'
-# oppure ricade sulla muratura procedurale se manca.
-textures/src/
-
 # Anche gli artefatti Pepakura in export/ sono versionati (.pdf del pattern,
 # .pdo di progetto, .png del layout). All'inizio erano esclusi come "rigenerabili
 # dagli .obj", ma non lo sono davvero: con la versione gratuita di Pepakura il

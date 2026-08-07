@@ -1,6 +1,6 @@
 # Torre dei dadi in carta — istruzioni
 
-Torre alta **30 cm** in cartamodello. I dadi si lanciano dall'alto, rimbalzano sui deflettori interni e usciti dal varco si fermano nella vaschetta.
+Torre alta **30 cm** in cartamodello, da stampare in bianco e colorare come preferisci. I dadi si lanciano dall'alto, rimbalzano sui deflettori interni e usciti dal varco si fermano nella vaschetta.
 
 ---
 
@@ -13,20 +13,6 @@ Torre alta **30 cm** in cartamodello. I dadi si lanciano dall'alto, rimbalzano s
 | pieghe | una stecca per cordonare, o il dorso di una lama smussata |
 | colla | stick per le superfici larghe, vinilica per le linguette piccole |
 | facoltativo | carta velina colorata (ambra o blu) per le finestre |
-
----
-
-## Tre versioni: scegli quale stampare
-
-Lo stesso modello in tre vesti. Non c'è una versione migliore: cambiano il costo di stampa e quanto lavoro vuoi metterci tu.
-
-**Muratura** — la pietra è già stampata, muschio compreso: pronta appena assemblata. È la più esigente in inchiostro, circa il 28% della superficie su 4-5 fogli A4.
-
-**Tinte piatte** — colori uniformi e chiari, pensati per essere rifiniti a mano. Circa il 18% di inchiostro, e le tinte accettano bene matita colorata, pastello e pennarello.
-
-**Solo linee** — bianca, con stampati soltanto i tagli e le pieghe. Costo di inchiostro praticamente nullo, massima libertà se vuoi dipingerla tu, e le linee da seguire sono nitidissime perché non hanno niente sotto.
-
-La guida ai colori più sotto vale per le ultime due.
 
 ---
 
@@ -69,30 +55,6 @@ La striscia orizzontale lungo il bordo inferiore del muro **non è un errore del
 ### 7. Prova
 
 Prima di considerarla finita, fai passare il **dado più grosso** del set: deve scendere rimbalzando e fermarsi nella vaschetta. Il varco di uscita è alto 41 mm e un d20 ne misura circa 20, quindi ha margine.
-
----
-
-## Guida ai colori
-
-Vale per la versione a tinte piatte e per quella a sole linee. Tutto quello che segue è facoltativo.
-
-### Dove sono i due toni
-
-Nella versione a tinte piatte il grigio chiaro è la pietra e il verdino è la fascia con il muschio: la base del plinto, i primi 4 cm del fusto e tutto il muro di cinta. Sono le zone che nella realtà stanno a contatto col terreno, ed è lì che conviene mettere il verde anche partendo dalla versione bianca.
-
-### Un metodo che funziona
-
-1. **Fondo a matita colorata**, grigio caldo sulla pietra, tratteggiando nel senso dei corsi. Non uniformare troppo: la pietra irregolare è più credibile di quella perfetta.
-2. **Blocchi diversi tra loro.** Scurisci qualche pietra qua e là, a caso. È la variazione fra blocco e blocco che fa leggere la muratura, più del colore scelto.
-3. **Fughe più scure.** Passa una matita grigio scuro o una penna grigia nelle linee fra i blocchi. Se fai una cosa sola, fai questa: il giunto in ombra è ciò che distingue la pietra dal cartone colorato.
-4. **Muschio** solo nelle fughe e negli angoli della fascia verdina, con un verde spento — mai brillante. Il muschio cresce dove l'acqua si ferma, quindi giunti, spigoli e sottosquadri.
-5. **Colature** verticali sotto le feritoie e le finestre, con un grigio-bruno molto diluito o una matita passata leggera.
-
-### Da evitare
-
-**Acquerello e colori a base d'acqua** su carta già montata: la imbarcano e le pieghe cedono. Se vuoi usarli, colora i pezzi **da piatti**, lasciali asciugare sotto un peso, e monta dopo.
-
-Pennarelli a base alcolica traspaiono sul retro: su un pezzo che si vede da entrambi i lati (il pianale della vaschetta) fai una prova su uno scarto.
 
 ---
 

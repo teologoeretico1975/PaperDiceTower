@@ -1302,156 +1302,6 @@ def check_ramp_fits(ramp_obj, shell_obj, min_margin=0.04):
     }
 
 
-# Texture: due tile ripetibili generate da make_textures.py. Vedi quel file per il
-# perche' ripetibili invece di una texture unica.
-#
-# `tile_mm` e' il lato della tile misurato sul modello STAMPATO, non sul modello in
-# unita' di lavoro: la tile ha 8 corsi, quindi 80 mm danno corsi da 10 mm e blocchi
-# da 16-27 mm su una torre di 300 mm.
-#
-# `moss_below` e' la quota sotto la quale si usa la variante col muschio. Serve
-# perche' una tile ripetibile non ha un "basso": la variazione posizionale si
-# ottiene solo assegnando tile diverse a fasce diverse. Il valore coincide con lo
-# spigolo orizzontale a 0.95 creato dal varco, cosi' lo stacco cade su una piega
-# esistente invece di tagliare una faccia a metà.
-TEXTURE = dict(tile_mm=80.0, moss_below=0.96)
-
-# Due varianti stampabili dello stesso modello, generate da make_textures.py.
-# Non e' una gerarchia di qualita' ma una scelta di prodotto lasciata a chi
-# stampa: la muratura copre di inchiostro il ~45% di 1.051 cm2, le tinte piatte
-# il ~18%, e su queste ultime matita e pennarello scrivono bene. La geometria e
-# le UV sono identiche, cambiano solo i materiali.
-TEXTURE_VARIANTS = {
-    "muratura": (("Pietra", "stone.png"), ("Pietra_muschio", "stone_moss.png")),
-    "tinte_piatte": (("Pietra_piatta", "flat_stone.png"),
-                     ("Pietra_piatta_muschio", "flat_moss.png")),
-    # Sole linee: la stampa si riduce ai tagli e alle pieghe disegnate da Pepakura.
-    # E' il gradino base della scala, e la geometria non cambia — aggiungere una
-    # skin nuova significa aggiungere una riga qui e una coppia di tile.
-    "linee": (("Bianco", "line_white.png"), ("Bianco_muschio", "line_white.png")),
-}
-
-
-def _texture_dir():
-    import os
-    return os.path.join(os.path.dirname(bpy.data.filepath), "textures")
-
-
-def load_stone_materials(variant="muratura"):
-    """Carica (o riusa) i due materiali della variante indicata."""
-    import os
-
-    if variant not in TEXTURE_VARIANTS:
-        raise RuntimeError(f"variante '{variant}' sconosciuta: "
-                           f"{sorted(TEXTURE_VARIANTS)}")
-    made = {}
-    for name, png in TEXTURE_VARIANTS[variant]:
-        path = os.path.join(_texture_dir(), png)
-        if not os.path.exists(path):
-            raise RuntimeError(
-                f"manca {path}: eseguire 'python make_textures.py' col Python di "
-                "sistema, non con quello di Blender (serve PIL)")
-        mat = bpy.data.materials.get(name)
-        if mat is None:
-            mat = bpy.data.materials.new(name)
-        mat.use_nodes = True
-        nt = mat.node_tree
-        for n in list(nt.nodes):
-            nt.nodes.remove(n)
-        out = nt.nodes.new("ShaderNodeOutputMaterial")
-        bsdf = nt.nodes.new("ShaderNodeBsdfPrincipled")
-        tex = nt.nodes.new("ShaderNodeTexImage")
-        img = bpy.data.images.get(png)
-        if img is None or img.filepath != path:
-            img = bpy.data.images.load(path, check_existing=True)
-        tex.image = img
-        tex.extension = "REPEAT"          # la tile si ripete fuori da 0..1
-        tex.location = (-400, 0)
-        bsdf.location = (-100, 0)
-        out.location = (150, 0)
-        bsdf.inputs["Roughness"].default_value = 0.85
-        nt.links.new(tex.outputs["Color"], bsdf.inputs["Base Color"])
-        nt.links.new(bsdf.outputs["BSDF"], out.inputs["Surface"])
-        made[name] = mat
-    clean_name, moss_name = (n for n, _ in TEXTURE_VARIANTS[variant])
-    return made[clean_name], made[moss_name]
-
-
-def uv_project(obj, tiles_per_unit):
-    """Proietta le UV in modo che i corsi restino orizzontali su tutta la torre.
-
-    `v` viene dalla quota z in coordinate mondo: cosi' i corsi di muratura si
-    allineano tra facce e tra anelli diversi, invece di ripartire da zero su ogni
-    pannello. `u` viene dall'ascissa curvilinea del centro faccia piu' lo
-    scostamento orizzontale locale, cosi' la larghezza dei blocchi resta costante
-    qualunque sia il raggio dell'anello.
-
-    Le facce orizzontali (pianale della vaschetta, fondo del plinto) non hanno una
-    direzione orizzontale locale sensata: si proiettano dall'alto.
-    """
-    mesh = obj.data
-    bm = bmesh.new()
-    bm.from_mesh(mesh)
-    uv = bm.loops.layers.uv.verify()
-    s = tiles_per_unit
-    for f in bm.faces:
-        n = f.normal
-        if abs(n.z) > 0.7:
-            for loop in f.loops:
-                co = loop.vert.co
-                loop[uv].uv = (co.x * s, co.y * s)
-            continue
-        c = f.calc_center_median()
-        radius = math.hypot(c.x, c.y)
-        u0 = math.atan2(c.y, c.x) * radius
-        right = n.cross(Vector((0, 0, 1)))
-        if right.length < 1e-9:
-            continue
-        right.normalize()
-        for loop in f.loops:
-            d = loop.vert.co - c
-            loop[uv].uv = ((u0 + d.dot(right)) * s, loop.vert.co.z * s)
-    bm.to_mesh(mesh)
-    mesh.update()
-    bm.free()
-
-
-def apply_stone_materials(objs, moss_below=None, tile_mm=None, all_mossy=(),
-                          variant="muratura"):
-    """Assegna UV e materiali di pietra agli oggetti indicati.
-
-    Rampa e Deflettori restano volutamente senza texture: sono interni e non si
-    vedono mai, quindi texturizzarli spreca inchiostro e area di stampa.
-    """
-    p = dict(TEXTURE)
-    if moss_below is not None:
-        p["moss_below"] = moss_below
-    if tile_mm is not None:
-        p["tile_mm"] = tile_mm
-
-    scale = REFERENCE_HEIGHT_MM / (PLINTH_H + SHAFT_H + sum(h for h, _ in RINGS))
-    tiles_per_unit = scale / p["tile_mm"]
-
-    clean, moss = load_stone_materials(variant)
-    report = {"variante": variant}
-    for obj in objs:
-        obj.data.materials.clear()
-        obj.data.materials.append(clean)
-        obj.data.materials.append(moss)
-        uv_project(obj, tiles_per_unit)
-        n_moss = 0
-        for poly in obj.data.polygons:
-            zs = [obj.data.vertices[i].co.z for i in poly.vertices]
-            mossy = obj.name in all_mossy or max(zs) <= p["moss_below"]
-            poly.material_index = 1 if mossy else 0
-            n_moss += int(mossy)
-        obj.data.update()
-        report[obj.name] = {"facce": len(obj.data.polygons), "con_muschio": n_moss}
-    report["tile_mm"] = p["tile_mm"]
-    report["tiles_per_unit"] = round(tiles_per_unit, 4)
-    return report
-
-
 def export_for_pepakura(target_height_mm=None, out_dir=None,
                         names=("Torre", "Rampa", "Muro", "Deflettori"), combined=True,
                         basename="PaperDiceTower"):
@@ -1504,12 +1354,11 @@ def export_for_pepakura(target_height_mm=None, out_dir=None,
             apply_transform=True,
             export_triangulated_mesh=False,
             export_normals=True,
-            # UV e materiali servono perche' Pepakura stampi la texture: scrive
-            # anche il .mtl. path_mode="COPY" mette il PNG accanto all'OBJ, cosi'
-            # la cartella e' autosufficiente e Pepakura trova l'immagine.
-            export_uv=True,
-            export_materials=True,
-            path_mode="COPY",
+            # Nessuna UV e nessun materiale: il modello e' senza texture, e
+            # scriverli genererebbe un .mtl vuoto. Vanno riattivati se e quando si
+            # ripartira' col capitolo texture (vedi memory/reference_texture_tentativi.md).
+            export_uv=False,
+            export_materials=False,
         )
         return path
 
@@ -1544,60 +1393,6 @@ def export_for_pepakura(target_height_mm=None, out_dir=None,
         "area_mm2": area_mm2,
         "pagine_a4_teoriche": round(sum(area_mm2.values()) / a4_printable, 2),
     }
-
-
-def flip_visible_floors(obj, z=0.0, tol=1e-3):
-    """Gira le facce orizzontali a quota *z*, perche' la texture cada sul lato in vista.
-
-    Le normali del guscio sono coerenti e corrette: l'interno della vaschetta e' un
-    unico spazio continuo con l'interno della torre attraverso il varco, quindi il
-    "sopra" del pianale e' superficie interna e la normale in basso e' quella
-    esterna. Senza texture non cambia nulla. Con la texture si', perche' viene
-    stampata sul lato verso cui punta la normale: il pianale risulterebbe decorato
-    sul lato che guarda il tavolo e bianco sul lato in vista, dove si appoggiano i
-    dadi ed e' la parte piu' guardata del modello.
-
-    Per una superficie aperta come questa non esiste un orientamento globale che
-    metta il lato stampato in vista **ovunque**: il pianale e' raggiungibile
-    seguendo il guscio dall'esterno, quindi qualche incoerenza e' inevitabile.
-    Girando i pavimenti a z=0 la si sposta sugli spigoli a filo del tavolo, che non
-    si vedono. Va eseguita come ultimo passo: un successivo recalc_face_normals la
-    annullerebbe.
-    """
-    mesh = obj.data
-    bm = bmesh.new()
-    bm.from_mesh(mesh)
-    target = [f for f in bm.faces
-              if all(abs(v.co.z - z) < tol for v in f.verts) and abs(f.normal.z) > 0.9]
-    for f in target:
-        f.normal_flip()
-    bm.normal_update()
-    bm.to_mesh(mesh)
-    mesh.update()
-    bm.free()
-    return {"facce_girate": len(target)}
-
-
-def export_all_variants(target_height_mm=None, basename=None, **kwargs):
-    """Esporta un OBJ per ciascuna variante di texture.
-
-    Geometria e UV sono identiche: cambiano solo i materiali, quindi basta
-    riassegnarli ed esportare di nuovo. I nomi delle immagini differiscono tra
-    varianti, cosi' i file copiati in export/ non si sovrascrivono a vicenda.
-    """
-    if basename is None:
-        basename = f"PaperDiceTower{SIDES}_{int(REFERENCE_HEIGHT_MM)}"
-    objs = [bpy.data.objects[n] for n in ("Torre", "Muro", "Rampa", "Deflettori")
-            if n in bpy.data.objects]
-    out = {}
-    for variant in TEXTURE_VARIANTS:
-        apply_stone_materials(objs, all_mossy=("Muro",), variant=variant)
-        suffix = "" if variant == "muratura" else "_" + variant
-        out[variant] = export_for_pepakura(target_height_mm=target_height_mm,
-                                           basename=basename + suffix, **kwargs)
-    # si lascia la scena sulla variante testurizzata, che e' quella di riferimento
-    apply_stone_materials(objs, all_mossy=("Muro",), variant="muratura")
-    return out
 
 
 def check_page_fit(target_height_mm=None, sides=None, page_mm=(200.0, 287.0)):
@@ -1715,23 +1510,9 @@ def build_all(sides=None):
     wall_report = check_mesh(muro)
     wall_report["expected_boundary_edges"] = wall_info["boundary_edges"]
 
-    # Ultimo passo sulla geometria della torre: dopo di qui nessun ricalcolo delle
-    # normali, altrimenti il ribaltamento dei pavimenti viene annullato.
-    floors = flip_visible_floors(torre)
-
-    # Il muro sta tutto a livello del suolo, quindi va interamente mossato.
-    # La rampa va texturizzata benche' sia interna: e' in piena vista attraverso il
-    # varco ed e' la superficie su cui i dadi atterrano. Anche i deflettori, perche'
-    # il piu' alto si vede dall'apertura sommitale, cioe' proprio quando si guarda
-    # dentro per lanciare.
-    materiali = apply_stone_materials([torre, muro, rampa, deflettori],
-                                      all_mossy=("Muro",))
-
     return {
         "sides": sides,
         "marks": marks,
-        "materiali": materiali,
-        "pavimenti_girati": floors,
         "windows": n_windows,
         "tray": tray,
         "slits": slits,

@@ -100,95 +100,40 @@ Scartata la scala a chiocciola: un elicoide non è una superficie sviluppabile, 
 
 Due merli adiacenti devono avere la **stessa altezza**. Se differiscono, al loro spigolo comune nascono due bordi liberi sovrapposti invece di una piega: due lembi di carta scollegati nello stesso punto. Con altezze uguali i vertici si condividono e i merli si fondono in uno più largo.
 
-## Texture
-
-Due tile di muratura **ripetibili**, generate da [make_textures.py](make_textures.py) con il Python di sistema (serve PIL):
-
-```bash
-python make_textures.py
-```
-
-Ripetibili e non una texture unica perché una tile piccola applicata con UV scalate resta nitida a qualunque scala di stampa e pesa pochi kB, mentre una texture unica per stampare 30 cm a 300 DPI vorrebbe 4096×4096. Lo script verifica da sé la continuità ai bordi confrontando il salto di colore fra bordi opposti con il salto medio interno.
-
-### La muratura viene da una fotoscansione
-
-Se in `textures/src/` c'è una mappa **diffuse** ripetibile, la muratura è derivata da quella; altrimenti lo script ricade su una muratura procedurale. La sorgente non è versionata (pesa MB e a chi usa il kit non serve): versionate sono le tile derivate, che sono il deliverable.
-
-**Verificare la licenza della sorgente prima di vendere il kit.** I pack CC0 (Poly Haven) sono utilizzabili commercialmente, altri no, e dal nome del file non si distingue.
-
-Due rimappature sono obbligatorie, e sono la parte non ovvia:
-
-1. **Schiarire.** Una texture per il 3D è pensata per essere *illuminata*: quella usata ha luminanza media 63/255 e massimo 170, cioè non contiene nemmeno un bianco. Su carta il valore stampato è quello finale, quindi così com'è coprirebbe il **75%** di inchiostro. Portata a media 185 scende al **28%**, e conserva più contrasto fra blocchi e fughe (88) della procedurale che sostituisce (78).
-2. **Ridurre la crominanza.** Applicare la gamma canale per canale amplifica la dominante calda della fotografia: la pietra grigia diventava arenaria dorata. Si rimappa la sola luminanza e la crominanza si comprime al 30%.
-
-Il muschio si posiziona dove l'acqua si ferma, combinando le zone in ombra dell'immagine (fughe e cavità) con un rumore ripetibile. Due parametri sono definiti per ciò che si vede e non per valori arbitrari: `coverage_pct` è la frazione di muschio **visibile** (soglia ricavata per percentile, perché un valore assoluto scelto a occhio aveva prodotto l'1% invece del 12%), e `gain` la nettezza del bordo della chiazza — con un valore basso la frangia morbida tingeva di verde il 72% della tile e la pietra risultava verde invece che grigia con chiazze.
-
-Il limite di una tile ripetibile è che **non ha un "basso"**: non può avere più muschio in fondo. La variazione posizionale si ottiene con due varianti assegnate a fasce di altezza — `stone_moss.png` sotto quota 0,96 (~42 mm dal suolo) e su tutto il muro, `stone.png` sopra. Lo stacco cade su uno spigolo orizzontale già esistente, così non taglia una faccia a metà.
-
-Le UV si proiettano con `v` preso dalla quota z in coordinate mondo: è questo che tiene i corsi di muratura allineati tra facce e tra anelli diversi, invece di farli ripartire da zero su ogni pannello.
-
-**Anche rampa e deflettori sono texturizzati**, benché interni: la rampa è in piena vista attraverso il varco ed è la superficie su cui i dadi atterrano, e il deflettore più alto si vede dall'apertura in cima, cioè proprio quando si guarda dentro per lanciare.
-
-Verificato: Pepakura importa la texture e la mostra sui pezzi 2D. L'export scrive `.obj` + `.mtl` + i PNG nella stessa cartella (`path_mode="COPY"`), così è autosufficiente.
-
-### Due varianti stampabili
-
-Il costo di stampa è un vincolo reale, non un dettaglio: si stampano 1.051 cm² su 4-5 fogli A4. Invece di scegliere fra resa e costo si spedisce il kit in **due vesti**, lasciando la scelta a chi stampa:
-
-| variante | inchiostro | per chi |
-|---|---|---|
-| `linee` | 0% | stampa solo tagli e pieghe: base bianca da colorare o dipingere |
-| `tinte_piatte` | 18% | tinte chiare già stampate, da rifinire a mano |
-| `muratura` | 28% | modello finito appena assemblato |
-
-Geometria e UV sono identiche fra le varianti: cambiano solo i materiali, quindi `export_all_variants()` riassegna e riesporta senza ricostruire nulla. I nomi delle immagini differiscono per variante, così i file copiati in `export/` non si sovrascrivono.
-
-Le tinte piatte e le linee hanno un vantaggio collaterale: sono abbastanza chiare da lasciare perfettamente leggibili le linee di taglio e piega di Pepakura, che con la muratura di medio grigio ci competono.
-
-### Aggiungere una skin
-
-Costa **una riga** in `TEXTURE_VARIANTS` più una coppia di tile: la geometria non si tocca. Ma il costo vero non è qui.
-
-**Ogni skin richiede la sua impaginazione in Pepakura**, e con la versione gratuita l'impaginazione non è salvabile: sono ~15 minuti di lavoro manuale per skin, ogni volta. Con la licenza si salva un `.pdo`, si sostituisce la texture e si riesporta in pochi minuti.
-
-Quindi un catalogo di skin è economico solo con la licenza. Da verificare, perché decide il flusso di lavoro: se Pepakura permetta di **sostituire l'immagine** in un `.pdo` già impaginato. Se sì, una sola impaginazione serve tutte le skin.
-
-La guida per colorare la versione a tinte piatte è in [ISTRUZIONI.md](ISTRUZIONI.md), che è il documento rivolto all'acquirente — pubblico diverso da questo README.
 
 ## Struttura della cartella
 
 - `build_tower.py` — generatore parametrico del modello (fonte di verità)
-- `make_textures.py` — generatore delle tile di muratura (Python di sistema, serve PIL)
-- `textures/` — le due tile ripetibili, rigenerabili
 - `PaperDiceTower.blend` — scena Blender, variante a **9 lati**
 - `PaperDiceTower7.blend` — variante semplificata a **7 lati** (vedi sotto)
 - `export/` — OBJ per Pepakura più i PDF del pattern e gli screenshot del layout. Tutto versionato: con la versione gratuita di Pepakura il progetto `.pdo` non è salvabile, quindi il PDF e lo screenshot sono l'unico record dell'impaginazione manuale
 - `checklist_export_pepakura.md` — verifiche prima dell'unfold e note di assemblaggio
-- `ISTRUZIONI.md` — documento per l'**acquirente**: montaggio e guida ai colori
+- `ISTRUZIONI.md` — documento per l'**acquirente**: montaggio e risoluzione dei problemi
 - `screenshots/` — catture del viewport per ogni iterazione
 - `memory/` — note di collaborazione per sessioni Claude future (vedi `memory/MEMORY.md`)
 
 ## Stato
 
-**Geometria completa e pronta per l'unfold.** Silhouette, finestre, feritoie, varco, vaschetta, rampa, merlature, muro di cinta. Tutti i controlli passano su tutti e tre gli oggetti:
+**Geometria completa e validata, unfold verificato in Pepakura, prova di stampa ancora da fare.** Silhouette, finestre, feritoie, varco, vaschetta, rampa, deflettori, merlature, muro di cinta. Tutti i controlli passano su tutti e quattro gli oggetti, alla versione di riferimento (7 lati):
 
 | oggetto | facce | non-manifold | non planari | bordi |
 |---|---|---|---|---|
-| `Torre` | 158 | 0 | 0 | 135 = attesi |
-| `Muro` | 21 | 0 | 0 | 34 = attesi |
+| `Torre` | 123 | 0 | 0 | = attesi |
+| `Muro` | 16 | 0 | 0 | = attesi |
+| `Deflettori` | 16 | 0 | 0 | = attesi |
 | `Rampa` | 5 | 0 | 0 | 0 (guscio chiuso) |
 
-OBJ esportati in `export/`, scalati per una torre alta 200 mm.
+Il pattern è impaginato su **2 pagine A4** (4 alla scala di 300 mm), PDF vettoriale. OBJ, PDF e screenshot dei layout sono in `export/`.
 
-### Prossimo passo: prova di unfold e assemblaggio
+### Prossimo passo: prova di stampa e assemblaggio
 
-Nessuno ha ancora aperto il modello in Pepakura. I controlli garantiscono che la mesh sia *valida*, non che l'unfold produca pezzi comodi da montare: quella è la prova che conta e va fatta prima di investire tempo in materiali e texture.
+I controlli garantiscono che la mesh sia *valida* e Pepakura che l'unfold sia pulito; nessuno dei due dice se i pezzi sono comodi da montare. Quella è la prova che manca.
 
-Punti dove è più probabile dover tornare sui parametri, in ordine di rischio:
+Punti dove è più probabile dover tornare sui parametri, in ordine di rischio (misure a 300 mm):
 
-1. **Pezzi a scheggia nell'unfold** — se Pepakura genera pannelli stretti e allungati, la faccia corrispondente va allargata in `build_tower.py`.
-2. **Feritoie larghe 2,8 mm** (`SLIT_HALF_W`) — al limite del ritagliabile a mano. Se si strappano, allargarle.
-3. **Varco di uscita alto 29 mm** contro un d20 da ~20 mm — sulla carta passa, ma va provato col set di dadi vero (`opening_top` in `add_dice_tray`).
-4. **Soglia dell'apertura del muro**, ~2,3 mm (`WALL_GATE["v_bottom"]`) — se si strappa, alzare il bordo inferiore.
+1. **Feritoie larghe 3,9 mm** (`SLIT_HALF_W`) — il dettaglio più fragile al taglio. Se si strappano, allargarle.
+2. **Soglia dell'apertura del muro**, ~3,3 mm (`WALL_GATE["v_bottom"]`) — se si strappa, alzare il bordo inferiore.
+3. **Catena di triangoli del plinto** (`PLINTH_JAG`) — pieghe ravvicinate, scomode da cordonare.
+4. **Varco di uscita alto 41,5 mm** contro un d20 da ~20 mm — ampio margine, ma va provato col set di dadi vero (`opening_top` in `add_dice_tray`).
 
-Materiali e texture sono fatti (vedi sopra) e verificati passare in Pepakura. La grafica è volutamente di base: serviva prima chiudere il rischio che la versione gratuita di Pepakura scartasse la texture. Ora che è verificato, si può investire — l'occlusione ambientale cotta nella texture è il passo che darebbe più profondità.
+**Materiali e texture sono azzerati** e da ripensare dal concept: le prove fatte funzionavano tecnicamente ma il risultato era esteticamente mediocre. Il modello si esporta bianco, senza UV né materiali. Prima di ritentare leggere `memory/reference_texture_tentativi.md`, che elenca le strade già battute e il vincolo di fondo.

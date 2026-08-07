@@ -88,19 +88,17 @@ Carta **200 g/m²**, e alla scala di riferimento si può salire fino a ~250: il 
 
 **Attenzione a un vincolo operativo:** con la versione gratuita di Pepakura non si può salvare il `.pdo`. Ogni reimport dell'OBJ azzera impostazioni e impaginazione, che vanno rifatte a mano (~15 minuti). Quindi: **fare tutto in una sessione sola**. Per questo in `export/` sono versionati anche i PDF e gli screenshot dei layout: sono l'unico record di quel lavoro, e da lì si ricostruisce la disposizione invece di ripartire da zero. La ricetta dei passaggi è la sezione 6 di `checklist_export_pepakura.md`. Se il progetto va in vendita la licenza si ripaga subito.
 
-## 6. Materiali e texture
+## 6. Materiali e texture: azzerati, da ripensare
 
-**Fatti, e verificato che Pepakura li importi e li mostri sui pezzi 2D.** Due tile di muratura ripetibili generate da `make_textures.py`, applicate con UV che tengono i corsi allineati su tutta la torre. Dettagli nel README.
+**Il capitolo e' stato rimosso il 2026-08-07** su richiesta del committente: "i test fatti fino adesso danno in output risultati mediocri, compreso l'applicazione delle skin procedurali e quelle scaricate con licenza a pagamento". Si riparte da concept.
 
-La grafica è volutamente **di base**: il rischio da chiudere per primo era che la versione gratuita di Pepakura scartasse la texture, e non valeva la pena investire prima di saperlo. Ora che passa, il passo che darebbe più profondità è cuocere l'occlusione ambientale nella texture (i rientri delle finestre e gli angoli più scuri).
+Nessuno dei fallimenti era tecnico. Tile ripetibili senza cuciture, Pepakura che importava e mostrava la texture sui pezzi 2D, export autosufficiente con `.mtl` e PNG, doppio layer UV per le skin dipinte verificato end-to-end: tutto funzionava. Il problema era **estetico**, e la prossima volta va affrontato come tale invece che come problema di generazione.
 
-**Pavimenti in vista: risolto.** Il pianale della vaschetta e il pavimento interno sono superfici interne (l'interno della vaschetta è un unico spazio continuo con quello della torre attraverso il varco), quindi la texture finiva sul lato che guarda il tavolo. `flip_visible_floors()` gira le facce orizzontali a quota zero, a costo di zero pezzi, e verificato in Pepakura. **Va eseguita come ultimo passo**: un `recalc_face_normals` successivo la annulla in silenzio. Vedi `checklist_export_pepakura.md`, sezione 3-bis, per il motivo per cui qualche incoerenza di avvolgimento è inevitabile su una superficie aperta.
+Quello che resta e' l'elenco delle strade gia' battute e del perche' non hanno funzionato, in `memory/reference_texture_tentativi.md`. **Leggerlo prima di ritentare**: contiene il vincolo di fondo, cioe' che una tile ripetibile non sa dove si trova sul modello e quindi lo stile hand-painted le e' strutturalmente precluso.
 
-La muratura è derivata da una **mappa diffuse fotoscansionata** in `textures/src/`, non versionata: se manca, `make_textures.py` ricade su una muratura procedurale. Va **verificata la licenza della sorgente** prima di vendere il kit. Due rimappature sono obbligatorie e non ovvie — schiarire (una texture per il 3D è pensata per essere illuminata: così com'era coprirebbe il 75% di inchiostro) e ridurre la crominanza (la gamma per canale trasformava la pietra grigia in arenaria dorata). Dettagli nel README.
+Il codice rimosso resta recuperabile dalla storia git (commit `2d6a87d` in avanti) se il nuovo concept ne riusa dei pezzi: le due rimappature per portare una fotoscansione dal 3D alla stampa, in particolare, sono conoscenza che vale a prescindere dallo stile scelto.
 
-**Due varianti stampabili**, non una: `muratura` (28% di inchiostro) e `tinte_piatte` (18%, da colorare a mano). Il costo di stampa era un vincolo reale — quasi metà di 4-5 fogli A4 — e invece di scegliere fra resa e costo si lascia la scelta a chi stampa. `export_all_variants()` produce entrambe: geometria e UV sono identiche, cambiano solo i materiali.
-
-C'è quindi un documento in più, `ISTRUZIONI.md`, rivolto all'**acquirente** e non al progetto: montaggio, ordine dei pezzi e guida per colorare la versione a tinte piatte. Va tenuto distinto da README e da questo file, che parlano a chi sviluppa il modello.
+L'esportatore e' tornato a `export_uv=False, export_materials=False`.
 
 ## 7. Trappole di ambiente
 

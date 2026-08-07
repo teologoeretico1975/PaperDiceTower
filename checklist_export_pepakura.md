@@ -61,24 +61,6 @@ Attenzione a un falso allarme: i fianchi della vaschetta hanno normale **tangenz
 
 ---
 
-## 3-bis. Superfici interne in vista — risolto
-
-Le normali sono coerenti e corrette: 152 pareti verso l'esterno, 2 tangenziali (i fianchi della vaschetta, per costruzione), 0 verso l'interno. Le facce orizzontali a z=0 puntano in basso, ed è giusto: **l'interno della vaschetta è un unico spazio continuo con l'interno della torre**, collegato attraverso il varco, quindi il "sopra" del pianale è superficie interna. In Pepakura appare grigio perché guardandola dall'alto si vede il retro del foglio, come guardando dentro una scodella.
-
-Senza texture non cambia nulla. **Con la texture sì**: viene stampata sul lato verso cui punta la normale, quindi il pianale risultava decorato sul lato che guarda il tavolo e bianco sul lato in vista — dove si appoggiano i dadi ed è la parte più guardata del modello. In Pepakura si vedeva come area grigia piatta mentre le pareti avevano la muratura.
-
-**Soluzione adottata: `flip_visible_floors()` gira le facce orizzontali a quota zero** — le due del pianale della vaschetta e il pavimento interno della torre. Costa zero pezzi, e verificato in Pepakura: i pezzi ora portano la muratura.
-
-Il pavimento interno è incluso perché attraverso il varco se ne vede una striscia davanti al bordo della rampa: lasciarlo fuori avrebbe spostato il problema di dieci centimetri invece di risolverlo.
-
-Due cose da sapere se un domani si volesse "correggere" questa scelta:
-
-- **Per una superficie aperta non esiste un orientamento globale che metta il lato stampato in vista ovunque.** Seguendo il guscio dall'esterno si arriva al pianale, e lì il lato "fuori" è quello che guarda il tavolo. Qualche incoerenza di avvolgimento è inevitabile: la scelta è solo dove metterla, e girando i pavimenti finisce sugli spigoli a filo del tavolo, che non si vedono. Non è un difetto topologico — il controllo di manifold-ness resta a 0.
-- **Va eseguita come ultimo passo** sulla geometria: qualunque `recalc_face_normals` successivo, o un "Recalculate Outside" a mano in Blender, la annullerebbe in silenzio.
-
-Il piano B, se servisse: pianale come pezzo separato da incollare sopra. Costa un pezzo piatto, non ha incoerenze, e irrobustisce il punto dove i dadi atterrano.
-
-Gli altri interni (fusto, corpo principale) non si vedono, e per loro la carta bianca all'interno è la norma nel papercraft.
 
 ## 4. Cosa NON fare
 
@@ -145,7 +127,7 @@ Cosa fa e perché:
 - **La scala è già dentro il file**: i numeri nell'OBJ sono millimetri, quindi la torre esce alta esattamente 200 mm. La scala si applica in export (`global_scale`), non ridimensionando gli oggetti: il modello sul disco resta in unità di lavoro e puoi esportare a taglie diverse senza toccarlo. Verifica comunque la scala nella finestra di dialogo di Pepakura.
 - **Niente triangolazione** (`export_triangulated_mesh=False`): triangolare moltiplicherebbe le linee di piega. Le facce quadrangolari e n-gon sono per costruzione planari, quindi Pepakura le apre come un unico pannello.
 - **Assi**: esportati con la convenzione OBJ standard (Up = Y, Forward = -Z), cioè la Z di Blender diventa Y. Se Pepakura mostra il modello coricato, ruotalo lì o riesporta con `up_axis='Z'` — è l'unico parametro di cui non ho conferma diretta sul comportamento di Pepakura.
-- **Niente materiali/UV** finché non ci sono texture, per non generare un `.mtl` vuoto.
+- **Niente materiali/UV** (`export_uv=False`, `export_materials=False`): il modello è senza texture — il capitolo è stato azzerato, vedi `memory/reference_texture_tentativi.md` — e scriverli genererebbe un `.mtl` vuoto. Da riattivare se e quando si riparte da un nuovo concept grafico.
 
 ---
 
@@ -192,7 +174,6 @@ Risultato atteso: 2 pagine A4, PDF vettoriale di ~27 KB.
 ## 8. Assemblaggio — note che nascono dal modello
 
 - **Finestre**: dietro va incollato un foglietto di **carta velina colorata** (ambra o blu) come vetro. Un pezzo piatto per finestra. Se prevedi un LED interno, la velina fa l'effetto vetrata illuminata.
-- **Interno scuro**: perché le finestre leggano scure come nella reference, la faccia interna del foglio va stampata scura, altrimenti si vede il retro bianco della carta attraverso i fori.
 - **Grammatura della carta**: **200 g/m²** alla scala di riferimento, con margine fino a ~250. I due limiti si sono spostati passando a 30 cm: il tetto superiore era la fragilità dei dettagli piccoli, che ora sono una volta e mezza più grandi (feritoie da 3,9 mm invece di 2,6), quindi si può salire; il limite inferiore invece si è alzato, perché una torre di 30 cm ha più peso da reggere e sotto i 180 g/m² il fusto flette. A 20 cm valeva invece 170-200 con tetto stretto.
 - **Incidere le pieghe prima di piegare**, con una stecca o il dorso di una lama. A 200 g/m² una piega non incisa si spacca o si arrotonda, e sul plinto le pieghe sono ravvicinate.
 - **Rampa**: è un sotto-assemblaggio a sé (cuneo chiuso di 5 facce, pendenza ~17°). Va incollata dentro il guscio **prima** di chiudere la torre, con il bordo basso a filo del varco.
