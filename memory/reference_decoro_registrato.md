@@ -24,6 +24,8 @@ Perche' non generarlo, pur avendo un prototipo funzionante: lo stile non e' deri
 3. **Il segno della PCA e' arbitrario**, quindi da solo non dice da che parte sta l'arco: soglia e chiave sono finite invertite. Il verso si ricava dalla forma — l'estremita' ad arco e' a punta, quella della base e' larga.
 4. **La mitra esplode sugli spigoli acuti.** L'apice dell'arco a punta produceva una lisca lunga d/cos(mezzo angolo). Va smussata sotto una soglia di angolo.
 
+**Correzione del 2026-08-07, dopo aver analizzato un prodotto simile** (vedi [[reference-prodotto-simile]]): avevo concluso che il diverso orientamento dei pezzi sul foglio rendesse impossibile dipingere sul cartamodello srotolato. Troppo forte. Le rotazioni sono un artefatto dell'**impaginazione**, non della geometria: reimpaginando con la verticale della torre concorde su tutti i pezzi, il foglio ridiventa un'immagine dell'oggetto e la pittura 2D torna praticabile. Il prezzo e' in pagine, non tecnico.
+
 **Vincolo dimensionale:** il decoro aggiunge ~4,5 mm per lato, quindi la finestra decorata occupa ~21 mm su un pannello di ~35 mm. Non ci sta un secondo livello di ornamento.
 
 **Vincoli del disegno a mano.** Nota pratica: il PDF di Pepakura contiene 48 tessere raster di sfondo bianco, che in Inkscape arrivano come 48 immagini da cancellare a mano prima di iniziare. Poi: il disegno e' **congelato su quel layout**, quindi geometria e impaginazione vanno congelate prima. Dove il decoro attraversa una piega deve continuare; l'unico punto delicato e' la cucitura che chiude il tubo, dove primo e ultimo pannello sono agli estremi opposti del foglio. Non disegnare sulle linguette (l'inchiostro indebolisce la presa della colla) e fermarsi ~0,3 mm prima dei tagli.
