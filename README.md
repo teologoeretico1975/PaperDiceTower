@@ -68,9 +68,9 @@ Perché uno script e non solo il `.blend`: il file Blender è un binario opaco i
 Quattro oggetti, cioè quattro sotto-assemblaggi distinti: `Torre` (guscio), `Rampa` (cuneo interno), `Muro` (cinta decorativa), `Deflettori` (quattro strisce corrugate interne).
 
 - **Plinto**: base svasata con raggi irregolari, roccia semplificata a facce piatte.
-- **Fusto**: slanciato (rapporto altezza/larghezza ~3,5:1), con 9 **feritoie** verticali passanti ad altezze alternate — alternarle evita di rimuovere carta lungo un unico anello del tubo, che è la parte portante.
+- **Fusto**: slanciato (rapporto altezza/larghezza ~3,5:1), con 7 **feritoie** verticali passanti ad altezze alternate (una per faccia) — alternarle evita di rimuovere carta lungo un unico anello del tubo, che è la parte portante.
 - **Silhouette a stadi**: tronchi di cono alternati a tratti cilindrici (tamburi). I tamburi sono quello che distingue una torre da un proiettile: senza tratti piatti tra un restringimento e l'altro il profilo legge come una curva continua.
-- **Corpo principale**: tamburo più largo del fusto, con 9 **finestre ad arco a punta passanti** (contorno faceted: base rettangolare più arco in 4 segmenti). Sono fori, non tasche: dietro si incolla carta velina colorata come "vetro".
+- **Corpo principale**: tamburo più largo del fusto, con 7 **finestre ad arco a punta passanti** (contorno faceted: base rettangolare più arco in 4 segmenti). Sono fori, non tasche: dietro si incolla carta velina colorata come "vetro".
 - **Varco e vaschetta**: apertura che attraversa plinto e base del fusto (il plinto da solo è troppo basso perché passi un dado), con vaschetta a settore radiale saldata a livello del suolo.
 - **Rampa**: cuneo inclinato ~17° che convoglia i dadi verso il varco, altrimenti su un pavimento piatto restano dentro.
 - **Deflettori**: quattro strisce corrugate che attraversano il fusto da parete a parete, a quote e rotazioni diverse. Senza, il dado fa 263 mm di caduta libera in un tubo largo 63 mm: non tocca nulla e arriva giù con la faccia con cui è entrato, quindi la torre non randomizza niente.
@@ -158,8 +158,23 @@ Non servono librerie PDF: il file è vettoriale e si decomprime con zlib. Il too
 
 Il punto fragile confermato è uno solo: le feritoie, larghe **3,9 mm**, che sono la dimensione minima di tutto il cartamodello.
 
+Il tool identifica ogni pezzo per **numero di segmenti e di pieghe** — invarianti per rotazione, a differenza delle dimensioni — e ne riporta il blocco e il colore di cartoncino. Controlla anche tre invarianti del cartamodello, **636 segmenti / 13 pezzi / 15 fori**: sono gli stessi pezzi comunque li si impagini, quindi dopo una re-impaginazione manuale quei numeri devono tornare identici. Se cambiano, il layout ha perso o duplicato qualcosa — un errore che guardando il foglio non si vede.
+
+### Suddivisione per colore di cartoncino
+
+Il colore viene dalla carta, non dalla stampa: **due colori su quattro pagine**.
+
+| pagina | pezzi | carta |
+|---|---|---|
+| 1 | corpo principale con le rastremazioni, 2 deflettori | pietra |
+| 2 | muro di cinta, parapetto e merlature, rampa | pietra |
+| 3 | le tre strisce del fusto (7 feritoie in tutto, 5 + 1 + 1) | pietra |
+| 4 | plinto, pianale della base, 2 deflettori | verde erba |
+
+Il conto delle pagine dipende dal **numero di colori, non dalla scala**: ogni colore vuole almeno un foglio suo.
+
 ### Grafica
 
-**Il colore viene dal cartoncino colorato, non dalla stampa**, su una palette chiara. Il decoro è **vettoriale e registrato sulle feature**: `tools/pattern.py pdf` lo genera dal contorno reale delle finestre (archivolto a conci, chiave d'arco, soglia) e produce due varianti del pattern, `_vettoriale.pdf` e `_decoro.pdf`, nelle coordinate di pagina originali.
+**Il colore viene dal cartoncino colorato, non dalla stampa**, su una palette chiara. Il **decoro si disegna a mano in post-produzione**, in Inkscape sopra il PDF di Pepakura con il pattern su un layer bloccato.
 
-Perché questa strada e non una texture: una tile ripetibile non sa dove si trova sul modello, quindi non può disegnare l'arco attorno a *quella* finestra — è il vincolo che ha fatto abbandonare il capitolo texture. Il cartamodello 2D invece lo sa. Vedi `memory/reference_decoro_registrato.md` e `memory/reference_texture_tentativi.md`.
+Perché sul cartamodello 2D e non come texture sul 3D: una tile ripetibile non sa dove si trova sul modello, quindi non può disegnare l'arco attorno a *quella* finestra — è il vincolo che ha fatto abbandonare il capitolo texture. Il pattern srotolato invece lo sa, perché ogni finestra e ogni piega ha coordinate precise. Vedi `memory/reference_decoro_registrato.md` e `memory/reference_texture_tentativi.md`.

@@ -16,19 +16,20 @@ Il colore lo dà il **cartoncino**: ogni pagina del cartamodello raccoglie i pez
 | colla | stick per le superfici larghe, vinilica per le linguette piccole |
 | facoltativo | carta velina colorata (ambra o blu) per le finestre |
 
-### Colori consigliati
+### Su che carta stampare ogni pagina
 
-Tinte **chiare**: le linee di taglio e piega sono stampate in nero, e su un cartoncino scuro non si vedono più.
+Sono **quattro pagine e due colori**. Tinte **chiare**: le linee di taglio e piega sono stampate in nero, e su un cartoncino scuro non si vedono più.
 
-| pagina | parte | colore |
+| pagina | cosa contiene | carta |
 |---|---|---|
-| 1 | base rocciosa | grigio medio |
-| 2 | fusto, quello con le feritoie | sabbia o pietra chiara |
-| 3 | corpo con le finestre | un tono più caldo: è la parte che si guarda |
-| 4 | parapetto e merlature | grigio medio, come la base |
-| 5 | vaschetta, rampa e muro di cinta | terra o verde salvia |
+| 1 | il corpo con le finestre ad arco | **pietra** (grigio chiaro o sabbia) |
+| 2 | muro di cinta, merlature, rampa | **pietra**, come la 1 |
+| 3 | il fusto — sono **tre** strisce | **pietra**, come la 1 |
+| 4 | base rocciosa e pianale | **verde erba** |
 
-I deflettori interni non si vedono mai: vanno bene su qualunque ritaglio avanzato.
+Le strisce rigate che trovi sulle pagine 1 e 4 sono i deflettori interni: non si vedono mai, quindi il loro colore è indifferente.
+
+Un controllo prima di iniziare: sulla **pagina 3** devono esserci **tre** strisce, con in tutto sette feritoie sottili. Se ne stampi solo due il fusto non si chiude.
 
 ---
 

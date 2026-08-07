@@ -7,11 +7,15 @@ metadata:
 
 Il capitolo texture era finito contro un muro registrato in [[reference-texture-tentativi]]: **una tile ripetibile non sa dove si trova sul modello**, quindi non puo' disegnare l'archivolto attorno a *quella* finestra ne' il corso di pietre che si allinea attraverso *quella* piega. Lo stile hand-painted le era strutturalmente precluso.
 
-**Il cartamodello 2D invece lo sa.** Ogni finestra, feritoia, merlo e piega ha coordinate precise sul foglio. Quindi il decoro non e' un problema di generazione di texture: e' disegno tecnico sul pattern. E' il riquadro che sblocca la questione, ed e' implementato in `tools/pattern.py`.
+**Il cartamodello 2D invece lo sa.** Ogni finestra, feritoia, merlo e piega ha coordinate precise sul foglio. Quindi il decoro non e' un problema di generazione di texture: e' disegno sul pattern. E' il riquadro che sblocca la questione.
 
 **La proprieta' che rende la cosa praticabile:** il decoro derivato *dalla feature* sta dentro il pezzo per costruzione, quindi **non ha bisogno di essere ritagliato sul contorno**. L'archivolto nasce dal contorno della finestra dilatato, quindi non puo' sbordare. Il decoro derivato dalla *superficie* (corsi di pietra su tutto il pannello) invece va ritagliato, e con linguette e merlature il ritaglio e' fragile.
 
-**Cosa e' derivabile e cosa no.** Lo script sa generare cio' che la geometria conosce: conci, chiavi d'arco, soglie, cantonali sulle pieghe, marcapiani alle rastremazioni. Non sa inventare uno stile. La divisione del lavoro concordata: il committente disegna **un** pannello in Inkscape sopra `export/PaperDiceTower7_300_vettoriale.pdf`, lo script lo replica sugli altri sei con la rotazione giusta. La torre e' a simmetria 7, quindi il disegno unico e' un settimo del lavoro apparente.
+**Decisione del 2026-08-07: il decoro si fa a MANO in post-produzione**, non generato. Il principio resta quello sopra — si disegna sul pattern 2D — ma l'implementazione e' Inkscape sopra il PDF di Pepakura, col pattern su un layer bloccato.
+
+Perche' non generarlo, pur avendo un prototipo funzionante: lo stile non e' derivabile dalla geometria (lo script sa fare conci, soglie, cantonali, marcapiani, non sa inventare un carattere), e un PDF derivato va tenuto in sincrono a **ogni** re-impaginazione. Il codice di generazione e' stato rimosso da `tools/pattern.py`, che resta il validatore del cartamodello; e' recuperabile dal commit `f878218`.
+
+**La simmetria fa la differenza:** a 7 lati con finestre e feritoie identiche, i motivi unici da disegnare sono cinque o sei, non tredici pezzi. Il disegno unico e' circa un settimo del lavoro apparente. Resta disponibile, se servisse, replicare a script un pannello disegnato a mano sugli altri sei con la rotazione corretta.
 
 **Quattro errori commessi implementandolo, tutti istruttivi:**
 
@@ -22,6 +26,6 @@ Il capitolo texture era finito contro un muro registrato in [[reference-texture-
 
 **Vincolo dimensionale:** il decoro aggiunge ~4,5 mm per lato, quindi la finestra decorata occupa ~21 mm su un pannello di ~35 mm. Non ci sta un secondo livello di ornamento.
 
-**Se si disegna a mano in post-produzione** (Inkscape sul `_vettoriale.pdf`, che e' una base migliore del PDF di Pepakura perche' non ha le 48 immagini raster dentro): il disegno e' **congelato su quel layout**, quindi geometria e impaginazione vanno congelate prima. Dove il decoro attraversa una piega deve continuare; l'unico punto delicato e' la cucitura che chiude il tubo, dove primo e ultimo pannello sono agli estremi opposti del foglio. Non disegnare sulle linguette (l'inchiostro indebolisce la presa della colla) e fermarsi ~0,3 mm prima dei tagli.
+**Vincoli del disegno a mano.** Nota pratica: il PDF di Pepakura contiene 48 tessere raster di sfondo bianco, che in Inkscape arrivano come 48 immagini da cancellare a mano prima di iniziare. Poi: il disegno e' **congelato su quel layout**, quindi geometria e impaginazione vanno congelate prima. Dove il decoro attraversa una piega deve continuare; l'unico punto delicato e' la cucitura che chiude il tubo, dove primo e ultimo pannello sono agli estremi opposti del foglio. Non disegnare sulle linguette (l'inchiostro indebolisce la presa della colla) e fermarsi ~0,3 mm prima dei tagli.
 
 Vedi [[project-panoramica]] e [[reference-pepakura-free]].

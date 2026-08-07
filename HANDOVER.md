@@ -27,9 +27,9 @@ Su entrambe: 0 non-manifold, 0 facce non planari, bordi pari agli attesi, rampa 
 
 Perché 7 lati **e** 300 mm, e non uno dei due: ridurre le facce allarga solo i pannelli (16,0 → 20,2 mm), mentre feritoie e soglie restano invariate perché sono misure assolute. Solo la scala allarga anche quelle (feritoia 2,6 → 3,9 mm). Le due leve non sono alternative. Confronto completo nel README.
 
-Verificato in Pepakura: scala 200 mm corretta, orientamento in piedi, nessun pezzo a scheggia, fori trattati come tagli e non come pieghe, nessuna sovrapposizione.
+Verificato in Pepakura: scala corretta, orientamento in piedi, nessun pezzo a scheggia, fori trattati come tagli e non come pieghe, nessuna sovrapposizione.
 
-Pattern impaginato su **2 pagine A4**, PDF **vettoriale** (707 segmenti, 27 KB). Le 24 immagini raster che restano nel PDF sono le tessere di sfondo bianco del livello texture, vuoto: innocue.
+Pattern impaginato su **4 pagine A4**, PDF **vettoriale**: 636 segmenti, 13 pezzi, 15 fori, il piu' grande 180,8 x 250 mm contro 200 x 287 stampabili. Le 48 immagini raster nel PDF sono tessere di sfondo bianco: innocue. Misurato con `tools/pattern.py`, non stimato.
 
 ## 3. Come si lavora
 
@@ -40,7 +40,7 @@ Serve Blender 5.1+ con l'add-on MCP di Blender Lab attivo — vedi `memory/refer
 ```python
 # dentro Blender
 exec(open(r"E:\repos\PaperDiceTower\build_tower.py").read())   # rigenera + stampa il report
-export_for_pepakura(target_height_mm=200)                       # scrive export/*.obj
+export_for_pepakura()                                           # scrive export/*.obj a 300 mm
 ```
 
 Il report di verifica deve dare **0** su `non_manifold_edges`, `loose_verts`, `non_planar_faces`, e `boundary_edges` pari a `expected_boundary_edges`. Perché quei controlli e non altri: `checklist_export_pepakura.md`.
@@ -53,13 +53,7 @@ python tools/pattern.py inventario export/PaperDiceTower7_300.pdf
 
 Legge il PDF (senza librerie PDF: è vettoriale, si decomprime con zlib) e misura i pezzi veri, riconoscendo le feature dalla firma dimensionale. Alla scala di riferimento deve trovare 7 finestre da 42,0 × 11,8 mm, 7 feritoie da 3,9 mm di larghezza, 4 deflettori da 33,8 × 68,1, e **nessun pezzo oltre i 200 × 287 mm stampabili**: il più grande è 180,8 × 250. Se quelle misure non tornano, la scala si è persa fra Blender e la stampa.
 
-Lo stesso modulo riscrive il pattern in due varianti:
-
-```bash
-python tools/pattern.py pdf export/PaperDiceTower7_300.pdf
-```
-
-Produce `_vettoriale.pdf` (solo linee) e `_decoro.pdf` (linee + decoro), nelle coordinate di pagina originali, e verifica da sé che i segmenti strutturali siano identici all'originale — **scarto 0,000000 mm**. Non ricopia le 48 tessere raster di sfondo bianco, quindi l'uscita è vettoriale pura: 7 KB invece di 55.
+Identifica ogni pezzo, dice su che colore di cartoncino va stampato, e controlla tre invarianti. Esce con codice 1 se un controllo non passa, quindi si può mettere in uno script.
 
 Perché uno script e non solo il `.blend`: il file Blender è un binario opaco in git, e modellare a incrementi rendeva ogni ritocco di proporzioni una ricostruzione manuale.
 
@@ -75,7 +69,7 @@ Sono controintuitive e sono già costate un giro di correzioni ciascuna.
 - **Qualunque partizione interna del tubo rende non-manifold il guscio** (lo spigolo di attacco avrebbe 3 facce). Per questo rampa e deflettori sono oggetti separati, che nel papercraft è anche la norma.
 - **La vaschetta è un settore radiale a livello del suolo.** Radiale perché così i fianchi sono complanari; a livello del suolo perché sospesa i dadi restavano dentro.
 - **Si esporta un OBJ solo con tutti i sotto-assemblaggi, non uno per oggetto.** Pepakura occupa almeno una pagina per documento: `Muro` e `Rampa` riempiono l'8% e il 6% di un A4, quindi con file separati si stampano tre pagine di cui due quasi bianche. Lo spreco di carta è una dimensione di costo da misurare come le altre.
-- **`export/`**: gli `.obj` si versionano, ciò che Pepakura produce (`.pdo`, `.pdf`) è ignorato.
+- **`export/` si versiona per intero**, `.obj` *e* PDF *e* screenshot dei layout. All'inizio i PDF erano esclusi come "rigenerabili", ma non lo sono: con Pepakura gratuito il `.pdo` non si salva, quindi il PDF piu' lo screenshot sono l'unico record di ~15 minuti di impaginazione manuale.
 
 Il "perché" completo di ognuna è in `memory/reference_vincoli_papercraft.md` e `memory/project_panoramica.md`.
 
@@ -113,8 +107,8 @@ Il vincolo che aveva ucciso le texture, registrato in `memory/reference_texture_
 Tre decisioni operative:
 
 - **Il colore viene dal cartoncino, non dalla stampa.** Palette chiara (sabbia, grigio perla, crema, verde salvia), scelta dal committente. Costa zero lavoro grafico, e' cio' che fanno le listing nella fascia di prezzo giusta, e sposta l'estetica sul cartoncino che sceglie l'acquirente invece che su una texture generata. Con palette chiara le linee nere restano leggibili, quindi **non** serve la stampa specchiata sul retro ne' il plotter da taglio.
-- **Il decoro e' vettoriale e registrato sulle feature.** `tools/pattern.py` lo genera dal contorno reale delle finestre: archivolto a conci, chiave d'arco, soglia con aggetto. Nascendo dalla feature sta dentro il pezzo per costruzione, quindi **non ha bisogno di ritaglio** — la proprieta' che una tile non puo' avere.
-- **Divisione del lavoro sul disegno.** Lo script genera cio' che e' *derivabile* dalla geometria; lo stile no. Il piano concordato: il committente disegna **un** pannello in Inkscape sopra `export/PaperDiceTower7_300_vettoriale.pdf`, e lo script lo replica sugli altri sei con la rotazione corretta. La torre e' a simmetria 7, quindi il disegno unico e' un settimo del lavoro apparente.
+- **Il decoro si disegna a mano in post-produzione**, in Inkscape sopra il PDF di Pepakura, tenendo il pattern su un layer bloccato. Un prototipo procedurale (archivolto a conci registrato sul contorno reale delle finestre) ha confermato che il principio funziona, ma la generazione automatica **e' stata rimossa il 2026-08-07**: lo stile non e' derivabile dalla geometria, e tenere in sincrono un PDF derivato a ogni re-impaginazione era solo manutenzione. Le lezioni del prototipo sono in `memory/reference_decoro_registrato.md`, il codice nel commit `f878218`.
+- **La simmetria aiuta molto.** La torre e' a 7 lati con finestre e feritoie identiche, quindi i motivi davvero unici da disegnare sono cinque o sei, non tredici pezzi: il disegno unico e' circa un settimo del lavoro apparente. Resta disponibile, se serve, replicare a script un pannello disegnato a mano sugli altri sei con la rotazione corretta.
 
 ### Suddivisione in blocchi per il cartoncino colorato
 
@@ -122,21 +116,25 @@ Tre decisioni operative:
 
 Dove invece Pepakura tiene insieme due blocchi, si separa **in Pepakura e non in Blender**. Motivo controintuitivo: un taglio interno alla stessa mesh e' uno spigolo tagliato, e Pepakura ci mette linguetta ed Edge ID accoppiati. Spezzare `Torre` in oggetti separati in Blender produrrebbe invece due **bordi liberi**: nessuna linguetta, perche' non c'e' niente da incollare, e nessuna numerazione che li accoppi. Servirebbe modellare un collarino telescopico a mano.
 
-Partizione di colore proposta (5 gruppi, non i 4 di assemblaggio: "corpo" da solo sarebbe il 93% dell'altezza e non fa composizione):
+**Suddivisione adottata**, impaginata a mano dal committente il 2026-08-07: **due colori su quattro pagine**. Piu' semplice della proposta iniziale a cinque colori, e piu' economica — il conto delle pagine e' dominato dal **numero di colori, non dalla scala**, perche' ogni colore vuole almeno un foglio suo.
 
-| # | blocco | quota (unita') | a 300 mm | colore |
-|---|---|---|---|---|
-| 1 | plinto | 0 → 0,45 | 20 mm | grigio scuro (roccia) |
-| 2 | fusto con feritoie | 0,45 → 3,65 | 140 mm | pietra chiara |
-| 3 | corpo principale con finestre | 4,38 → 5,88 | 66 mm | tono piu' caldo, e' il fuoco visivo |
-| 4 | parapetto e merli | 5,88 → 6,84 | 29 mm | come il plinto: base e corona scure incorniciano il fusto |
-| 5 | pianale, rampa, muro | al suolo | — | terra o verde |
+| pagina | carta | pezzi | come si riconosce |
+|---|---|---|---|
+| 1 | pietra | corpo principale con le rastremazioni + 2 deflettori | l'unico pezzo con le **7 finestre ad arco** |
+| 2 | pietra | muro di cinta, parapetto e merlature, rampa | il muro e' l'unico con **l'apertura ad arco** da 11,4 x 17,5 mm |
+| 3 | pietra | le **tre** strisce del fusto | portano in tutto le 7 feritoie, distribuite 5 + 1 + 1 |
+| 4 | verde erba | plinto, pianale della base, 2 deflettori | la catena di triangoli e il poligono grande |
 
-Deflettori: invisibili dentro il fusto, carta di scarto.
+Due cose da non sbagliare:
 
-Costo: **le pagine passano da 4 a ~6**, e il conto e' dominato dal **numero di colori, non dalla scala** — ogni colore vuole almeno un foglio suo. E' l'argomento per fermarsi a 5.
+- **Il fusto esce in tre pezzi, non uno.** Le feritoie sono 5 + 1 + 1: se sulla pagina 3 mancasse una striscia il tubo non si chiude. E' la verifica piu' facile a occhio.
+- **I deflettori possono stare su qualunque pagina.** Sono dentro il fusto e non si vedono mai, quindi due sul verde vanno bene. Sono i primi da spostare se serve spazio.
 
-Da verificare quando si impagina: dal PDF il corpo principale esce **attaccato alle due bande di rastremazione** tramite pieghe, quindi condividono il colore se non si separano. Accendere `Part Name` nelle Display Options da' la mappa autorevole pezzo-per-pezzo.
+Aperta e da decidere: la **rampa** e' sul grigio ma e' in piena vista attraverso il varco, ed e' la superficie su cui il dado rotola fuori. Se il verde vuol dire "il suolo", appartiene a quel gruppo.
+
+Il corpo principale esce **attaccato alle due bande di rastremazione** tramite pieghe, quindi condividono il colore per forza: separarle richiederebbe un taglio esplicito in Pepakura.
+
+**La verifica dopo ogni re-impaginazione** e' `python tools/pattern.py inventario`, che controlla tre invarianti — **636 segmenti, 13 pezzi, 15 fori** — e identifica ogni pezzo con il suo blocco e colore. Sono gli stessi pezzi comunque li si disponga, quindi quei numeri devono tornare identici: se cambiano, il layout ha perso o duplicato qualcosa, ed e' un errore che guardando il foglio non si vede. Verificato sul layout a due colori: tutti e tre tornano.
 
 ### Posizionamento, che condiziona tutto il resto
 
