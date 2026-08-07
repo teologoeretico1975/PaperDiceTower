@@ -31,6 +31,24 @@ Le strisce rigate che trovi sulle pagine 1 e 4 sono i deflettori interni: non si
 
 Un controllo prima di iniziare: sulla **pagina 3** devono esserci **tre** strisce, con in tutto sette feritoie sottili. Se ne stampi solo due il fusto non si chiude.
 
+### Stampa a dimensione reale — il controllo che conta
+
+Imposta **100%** (o "Dimensione reale" / "Actual size"). Se il lettore PDF o il driver applica **"Adatta alla pagina"** o "Riduci ai margini", il modello esce più piccolo di qualche punto percentuale: le linguette non combaciano più con i bordi corrispondenti e il kit diventa inutilizzabile. È un errore **silenzioso** — non te ne accorgi finché non sei a metà del montaggio.
+
+Come verificarlo in dieci secondi, appena esce la prima pagina:
+
+| misura | valore atteso |
+|---|---|
+| altezza di una finestra ad arco | **42 mm** |
+| larghezza della stessa finestra | **11,8 mm** |
+| lunghezza di una feritoia (pagina 3) | **35 mm** |
+
+Se non tornano, la stampa è scalata: correggi l'impostazione e ristampa.
+
+**Fai la prima prova su carta comune**, e passa al cartoncino colorato solo dopo che la misura è confermata. Quattro fogli da 200 g/m² colorati sono sprecati male.
+
+Un'ultima cosa sulla stampante: a 200 g/m² imposta il tipo di carta su **spessa/cartoncino**, e se c'è un percorso carta diritto (vassoio posteriore) usa quello. Il cartoncino che deve curvare attorno a un rullo si inceppa o esce già piegato.
+
 ---
 
 ## Assemblaggio
